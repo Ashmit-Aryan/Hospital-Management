@@ -1,0 +1,45 @@
+.card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: center;
+  }
+  
+  .card_name {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .card_specialization,
+  .card_contact {
+    font-size: 16px;
+    color: #555;
+    margin: 5px 0;
+  }
+  
+  .card_availability {
+    margin-top: 15px;
+  }
+  
+  .card_availability_list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .card_availability_item {
+    font-size: 14px;
+    color: #666;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .card_availability_item:last-child {
+    border-bottom: none;
+  }
+  
