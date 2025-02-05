@@ -1,7 +1,7 @@
 
 import "./css/style.css";
 import Header from "./components/Header";
-
+import { Analytics } from "@vercel/analytics/react"
 import Billings from "./components/Billings";
 import Home from "./components/Home";
 import Patients from "./components/Patients";
@@ -13,6 +13,7 @@ function App() {
 
   return (
     <div className="Body">
+      <Analytics/>
       <Header />
       <main>
         <Home />
