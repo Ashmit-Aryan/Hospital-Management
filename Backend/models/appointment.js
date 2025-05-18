@@ -1,10 +1,21 @@
 const mongoose = require('mongoose');
 
 const appointmentSchema = new mongoose.Schema({
-  patientId: String,
-  doctorId: String,
+  patientId: {type:String,required:true},
+  doctorId: {type:String,required:true},
+  appointmentType: { type: String, enum: ['In-Person', 'Telemedicine'], default: 'In-Person' },
+  appointmentReason: { type: String, required: true },
   date: { type: Date, required: true },
-  status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
+  time: { type: String, required: true }, // Consider using a DateTime type for better handling
+  notes: { type: String },
+  followUp: { type: Boolean, default: false },
+  followUpDate: { type: Date },
+  followUpReason: { type: String },
+  createdBy: { type: String, required: true }, // ID of the user who created the appointment
+  updatedBy: { type: String }, // ID of the user who last updated the appointment
+  updatedAt: { type: Date },
+  appointmentStatus: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
+  billnumber: { type: String, required: true, unique: true }, // Unique bill number for the appointment
   createdAt: { type: Date, default: Date.now }
 });
 

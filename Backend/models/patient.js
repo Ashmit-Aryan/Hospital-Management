@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
 const patientSchema = new mongoose.Schema({
-  name: String,
-  age: Number,
-  gender: String,
-  contact: String,
-  medicalHistory: String,
+  name: {type:String,required:true},
+  age: { type: Number, required: true },
+  gender: {type:String,required:true},
+  address: {type:String,required:true},
+  contact: {type:String,required:true},
+  medicalHistory: {type:String,required:true},
   createdAt: { type: Date, default: Date.now }
 });
 

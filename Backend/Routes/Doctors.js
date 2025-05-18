@@ -12,8 +12,8 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { name, specialization, contact, availability } = req.body;
-  const doctor = new Doctor({ name, specialization, contact, availability });
+  const { name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, availability } = req.body;
+  const doctor = new Doctor({ name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, availability});
   try {
     await doctor.save();
     res.status(201).json(doctor);
@@ -35,12 +35,17 @@ router.put("/update/:id/:changeReq/", async (req, res) => {
   const changeReq = req.params["changeReq"];
   const Value = req.body.value;
   const availChange = req.body.avail_change;
-  const prevValue = req.body.prev_value;
   const query = {};
+  // console.log("Value: ", Value);
+  // console.log("ChangeReq: ", changeReq);
+  // console.log("AvailChange: ", availChange);
   if (
     changeReq == "name" ||
     changeReq == "specialization" ||
-    changeReq == "contact"
+    changeReq == "contact" ||
+    changeReq == "experience" ||
+    changeReq == "qualifications" ||
+    changeReq == "hospitalAffiliation"
   ) {
     Object.defineProperty(query, changeReq, {
       value: Value,
@@ -54,41 +59,10 @@ router.put("/update/:id/:changeReq/", async (req, res) => {
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
-    //   try {
-    //     await Doctor.findByIdAndUpdate(new mongoose.mongo.ObjectId(_id), {
-    //       $set: { changeReq: value },
-    //     });
-    //     res.status(202).json({ message: "Updates Successful" });
-    //   } catch (error) {
-    //     res.status(500).json({ message: error.message });
-    //   }
-    // } else if (changeReq == "availability") {
-    //   if (availChange == "add") {
-    //     try {
-    //       await Doctor.updateOne(
-    //         { _id: new mongoose.mongo.BSON.ObjectId(id) },
-    //         { availability: value }
-    //       );
-    //       res.status(202).json({ message: "Done" });
-    //     } catch (error) {
-    //       res.status(500).json({ message: error.message });
-    //     }
-    //   }
-    //   }else if(availChange == 'delete' && prevValue != undefined){
-    //     try {
-    //       await Doctor.findByIdAndUpdate(
-    //         new mongoose.mongo.ObjectId(_id),
-    //         {$:{availability:value}},
-    //         {upsert:true}
-    //       )
-    //     } catch (error) {
-    //       res.status(500).json({message:error.message});
-    //     }
-    //   }
-  }else if(changeReq == "availability"){
+  }else if(changeReq == "availability" || changeReq == "languagesSpoken"){
     if(availChange == "add"){
       try {
-        await Doctor.findByIdAndUpdate(new mongoose.mongo.ObjectId(id), {$push:{availability:Value}});
+        await Doctor.findByIdAndUpdate({_id:id}, {$addToSet:{changeReq:Value}});
         res.status(202).json({ message: "Updates Successful" });
       } catch (error) {
         res.status(500).json({ error: error.message });
@@ -96,15 +70,7 @@ router.put("/update/:id/:changeReq/", async (req, res) => {
     }
     if(availChange == "delete"){
       try {
-        await Doctor.findByIdAndUpdate(new mongoose.mongo.ObjectId(id), {$pull:{availability:Value}});
-        res.status(202).json({ message: "Updates Successful" });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    }
-    if(availChange == "update"){
-      try {
-        await Doctor.findById(id).setUpdate({prevValue},{$set:{"availability.$":Value}});
+        await Doctor.findByIdAndUpdate({_id:id}, {$pull:{changeReq:Value}});
         res.status(202).json({ message: "Updates Successful" });
       } catch (error) {
         res.status(500).json({ error: error.message });

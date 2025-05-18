@@ -15,8 +15,8 @@ router.get("/", async (req, res) => {
 
 
 router.post("/", async (req, res) => {
-  const { name, age, gender, contact, medicalHistory } = req.body;
-  const patient = new Patient({ name, age, gender, contact, medicalHistory });
+  const { name, age, gender, address , contact, medicalHistory } = req.body;
+  const patient = new Patient({ name, age, gender, address,contact, medicalHistory });
   try {
     await patient.save();
     res.status(201).json(patient);
@@ -45,7 +45,8 @@ router.put("/update/:id/:changeReq", async (req, res) => {
     changeReq == "age" ||
     changeReq == "gender" ||
     changeReq == "contact" ||
-    changeReq == "medicalHistory"
+    changeReq == "medicalHistory" ||
+    changeReq == "address"
   ) {
     Object.defineProperty(query,changeReq,{
       value:Value,writable:false,enumerable:true,configurable:false
