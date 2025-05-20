@@ -10,6 +10,8 @@ const appointmentSchema = new mongoose.Schema({
   notes: { type: String },
   followUp: { type: Boolean, default: false },
   followUpDate: { type: Date },
+  followUpTime: { type: String },
+  followUpNotes: { type: String },
   followUpReason: { type: String },
   createdBy: { type: String, required: true }, // ID of the user who created the appointment
   updatedBy: { type: String }, // ID of the user who last updated the appointment
