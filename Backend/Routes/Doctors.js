@@ -11,9 +11,19 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id",async (req,res)=>{
+  try {
+    const doctor = await Doctor.findById(req.params.id);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found"})
+    res.json(doctor);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
+
 router.post("/", async (req, res) => {
-  const { name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, availability } = req.body;
-  const doctor = new Doctor({ name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, availability});
+  const { name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, appointments ,  availability } = req.body;
+  const doctor = new Doctor({ name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, appointments ,availability});
   try {
     await doctor.save();
     res.status(201).json(doctor);
@@ -59,7 +69,7 @@ router.put("/update/:id/:changeReq/", async (req, res) => {
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
-  }else if(changeReq == "availability" || changeReq == "languagesSpoken"){
+  }else if(changeReq == "availability" || changeReq == "languagesSpoken" || changeReq == "appointments"){
     if(availChange == "add"){
       try {
         await Doctor.findByIdAndUpdate({_id:id}, {$addToSet:{changeReq:Value}});

@@ -8,6 +8,7 @@ const doctorSchema = new mongoose.Schema({
   hospitalAffiliation: {type:String,required:true},
   languagesSpoken: [String], // Array of languages
   contact: {type:String,required:true},
+  appointments:[String],
   availability: [String], // Array of available days/times
   createdAt: { type: Date, default: Date.now }
 });
