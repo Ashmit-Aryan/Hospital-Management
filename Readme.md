@@ -1,3 +1,21 @@
+# Hospital Management System
+
+The **Hospital Management System** is a web-based application designed to facilitate the efficient management of hospital operations. This system provides a comprehensive solution for healthcare facilities, enabling them to manage patient records, appointments, billing, and staff information seamlessly. 
+
+## Key Features
+
+- **Patient Management**: Easily manage patient information, including personal details, medical history, and treatment records.
+- **Appointment Scheduling**: Allow patients to book appointments with doctors, view available slots, and receive reminders.
+- **Billing System**: Streamline the billing process with automated invoicing and payment tracking.
+- **Staff Management**: Manage healthcare staff information, including roles, schedules, and performance tracking.
+- **Reporting**: Generate reports on various aspects of hospital operations for better decision-making.
+
+## Technologies Used
+
+- **Frontend**: Built using modern web technologies such as HTML, CSS, and JavaScript, providing a responsive and user-friendly interface.
+- **Backend**: Developed with Node.js and Express, ensuring a robust server-side application.
+- **Database**: Utilizes MongoDB for efficient data storage and retrieval.
+
 # How to Run BackEnd
 
 ## MongoDB Local Installation Guide
