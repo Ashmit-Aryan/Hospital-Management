@@ -1,8 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const Patient = require("../Models/patient");
-const express = require('express')
+const express = require("express");
 const router = express.Router();
-
 
 router.get("/", async (req, res) => {
   try {
@@ -13,10 +12,29 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    res.json(patient);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 router.post("/", async (req, res) => {
-  const { name, age, gender, address , contact, medicalHistory } = req.body;
-  const patient = new Patient({ name, age, gender, address,contact, medicalHistory });
+  const { name, age, gender, address, contact, appointmentId, medicalHistory } = req.body;
+  const patient = new Patient({
+    name,
+    age,
+    gender,
+    address,
+    contact,
+    appointmentId,
+    medicalHistory,
+  });
   try {
     await patient.save();
     res.status(201).json(patient);
@@ -46,20 +64,24 @@ router.put("/update/:id/:changeReq", async (req, res) => {
     changeReq == "gender" ||
     changeReq == "contact" ||
     changeReq == "medicalHistory" ||
-    changeReq == "address"
+    changeReq == "address" ||
+    changeReq == "appointmentId"
   ) {
-    Object.defineProperty(query,changeReq,{
-      value:Value,writable:false,enumerable:true,configurable:false
+    Object.defineProperty(query, changeReq, {
+      value: Value,
+      writable: false,
+      enumerable: true,
+      configurable: false,
     });
   } else {
-    return res.send(500,{error:"Wrong Selection"})
+    return res.send(500, { error: "Wrong Selection" });
   }
   const _id = new mongoose.mongo.ObjectId(id);
   try {
-    await Patient.findByIdAndUpdate(_id,query);
-    res.status(202).json({message:"Done"});
+    await Patient.findByIdAndUpdate(_id, query);
+    res.status(202).json({ message: "Done" });
   } catch (error) {
-    res.status(500).json({ error: error.message });    
+    res.status(500).json({ error: error.message });
   }
 });
 
