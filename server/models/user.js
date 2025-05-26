@@ -8,6 +8,8 @@ const user = new mongoose.Schema({
     phone: {type:String,required:true,min:10,max:10},
     address: {type:String,required:true,min:6,max:255},
     createdBy:{type:String,required:true,min:6,max:255},
+    updatedBy:{type:String,required:true,min:6,max:255},
+    updatedAt:{type:Date,required:true,default:Date.now},
     createdAt: {type:Date,required:true,default:Date.now}
 })
 
