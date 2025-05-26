@@ -14,7 +14,7 @@ The **Hospital Management System** is a web-based application designed to facili
 
 ## Technologies Used
 
-- **Frontend**: Built using modern web technologies such as HTML, CSS, and Javascript, providing a responsive and user-friendly interface.
+- **Frontend**: Built using modern React JS, providing a responsive and user-friendly interface.
 - **Backend**: Developed with Node.js and Express, ensuring a robust server-side application.
 - **Database**: Utilizes MongoDB for efficient data storage and retrieval.
 
