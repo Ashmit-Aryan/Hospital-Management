@@ -25,7 +25,8 @@ const patients = require('./Routes/Patients');
 const doctors = require('./Routes/Doctors');
 const appointments = require('./Routes/Appointments');
 const billings = require('./Routes/Billings');
-
+const users = require('./Routes/User');
+app.use('/api/user',users);
 app.use('/api/patients',patients);
 app.use('/api/doctors',doctors);
 app.use('/api/appointments',appointments);
