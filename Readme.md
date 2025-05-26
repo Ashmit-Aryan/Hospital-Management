@@ -10,9 +10,11 @@ The **Hospital Management System** is a web-based application designed to facili
 - **Staff Management**: Manage healthcare staff information, including roles, schedules, and performance tracking.
 - **Reporting**: Generate reports on various aspects of hospital operations for better decision-making.
 
+*Note:- More Feature will be addded in the future 
+
 ## Technologies Used
 
-- **Frontend**: Built using modern web technologies such as HTML, CSS, and JavaScript, providing a responsive and user-friendly interface.
+- **Frontend**: Built using modern React JS, providing a responsive and user-friendly interface.
 - **Backend**: Developed with Node.js and Express, ensuring a robust server-side application.
 - **Database**: Utilizes MongoDB for efficient data storage and retrieval.
 
