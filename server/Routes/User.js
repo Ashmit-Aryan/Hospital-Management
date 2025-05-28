@@ -24,7 +24,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { name, email, password ,role, phone, address, createdBy } = req.body;
+  const { name, email, password, role, phone, address, createdBy } = req.body;
   const user = new User({
     name,
     email,
@@ -51,6 +51,21 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id/")
+router.put("/update/:id", async (req, res) => {
+  const { id } = req.params;
+  const changeReq = req.query.change;
+  const Value = req.body.value;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      id,
+      { $set: { [changeReq]: Value } },
+      { new: true }
+    );
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ message: err.message });
+  }
+});
 
 module.exports = router;
