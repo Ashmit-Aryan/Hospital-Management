@@ -40,9 +40,9 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-router.put("/update/:id/:changeReq/", async (req, res) => {
+router.put("/update/:id", async (req, res) => {
   const id = req.params["id"];
-  const changeReq = req.params["changeReq"];
+  const changeReq = req.query.change;
   const Value = req.body.value;
   const availChange = req.body.avail_change;
   const query = {};

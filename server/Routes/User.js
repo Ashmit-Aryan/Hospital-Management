@@ -51,6 +51,6 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-
+router.put("/update/:id/")
 
 module.exports = router;

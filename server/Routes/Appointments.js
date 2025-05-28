@@ -58,8 +58,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/update/:id/:changeReq",async (req,res)=>{
-   const { id, changeReq } = req.params;
+router.put("/update/:id",async (req,res)=>{
+   const { id } = req.params;
+   const changeReq = req.query.change;
    const Value = req.body.Value;
    try{
     const appointment = await Appointment.findByIdAndUpdate(id, { $set: { [changeReq]: Value }
