@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { default: mongoose } = require("mongoose");
-const Doctor = require("../Models/doctor");
+const Doctor = require("../models/doctor");
 
 router.get("/", async (req, res) => {
   try {

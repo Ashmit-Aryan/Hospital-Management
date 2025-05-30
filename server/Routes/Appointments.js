@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const Appointment = require("../Models/appointment");
+const Appointment = require("../models/appointment");
 const mongoose = require("mongoose");
 
 router.get("/", async (req, res) => {

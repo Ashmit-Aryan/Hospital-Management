@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const mongoose = require("mongoose");
-const Billing = require("../Models/billings");
+const Billing = require("../models/billings");
 
 // Get all bills
 router.get("/", async (req, res) => {

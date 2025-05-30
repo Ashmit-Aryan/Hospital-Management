@@ -27,8 +27,8 @@ const billingSchema = new mongoose.Schema({
   paymentDate: { type: Date },
   invoiceNumber: { type: String, required: true, unique: true },
   notes: { type: String, default: '' },
-  createdBy: { type: String, required: true }, // ID of the user who created the billing record
-  updatedBy: { type: String }, // ID of the user who last updated the billing record
+  createdBy: { type: mongoose.mongo.ObjectId, required: true }, // ID of the user who created the billing record
+  updatedBy: { type: mongoose.mongo.ObjectId }, // ID of the user who last updated the billing record
   updatedAt: { type: Date, default: Date.now }, // Set default to current date
   createdAt: { type: Date, default: Date.now }
 });

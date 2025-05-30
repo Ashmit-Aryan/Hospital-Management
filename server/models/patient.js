@@ -9,7 +9,11 @@ const patientSchema = new mongoose.Schema({
   contact: {type:String,required:true},
   appointmentId:{type:String,required:true},
   medicalHistory: {type:String,required:true},
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  createdBy:{type:mongoose.mongo.ObjectId,required:true},
+  updatedBy:{type:mongoose.mongo.ObjectId,required:true},
+  updatedAt: { type: Date, default: Date.now }
+  
 });
 
 module.exports = mongoose.model('Patient', patientSchema);

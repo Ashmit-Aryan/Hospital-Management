@@ -13,8 +13,8 @@ const appointmentSchema = new mongoose.Schema({
   followUpTime: { type: String },
   followUpNotes: { type: String },
   followUpReason: { type: String },
-  createdBy: { type: String, required: true }, // ID of the user who created the appointment
-  updatedBy: { type: String }, // ID of the user who last updated the appointment
+  createdBy: { type: mongoose.mongo.ObjectId, required: true }, // ID of the user who created the appointment
+  updatedBy: { type: mongoose.mongo.ObjectId }, // ID of the user who last updated the appointment
   updatedAt: { type: Date },
   appointmentStatus: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' },
   billnumber: { type: String, required: true, unique: true }, // Unique bill number for the appointment
