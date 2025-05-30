@@ -45,7 +45,7 @@ router.delete("/delete/:id", async (req, res) => {
 });
 
 router.put("/update/:id", async (req, res) => {
-  const { id } ``= req.params;
+  const { id } = req.params;
   const changeReq = req.query.change;
   const Value = req.body.value;
 
