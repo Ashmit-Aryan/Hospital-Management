@@ -27,45 +27,37 @@ router.post("/", async (req, res) => {
 // Update a bill
 router.put("/update/:id", async (req, res) => {
   const { id } = req.params;
-  const changeReq = req.query.change;
-  const Value = req.body.value;
-  const availChange = req.body.avail_change;
-
+  const { change: changeReq, value: Value, avail_change: availChange, insuranceDetails } = req.body;
   const _id = new mongoose.Types.ObjectId(id);
-  const query = {};
 
-  if (changeReq !== "InsuranceDetails") {
-    query[changeReq] = Value;
+  if (changeReq === "createdBy") {
+    return res.status(400).json({ message: "Cannot change createdBy" });
+  }
 
-    try {
-      await Billing.findByIdAndUpdate(_id, query, { new: true });
-      res.status(202).json({ message: "Update successful" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+  try {
+    if (changeReq !== "InsuranceDetails") {
+      await Billing.findByIdAndUpdate(_id, { [changeReq]: Value }, { new: true });
+      return res.status(202).json({ message: "Update successful" });
     }
-  } else {
-    const insuranceDetails = req.body.insuranceDetails;
 
-    try {
-      switch (availChange) {
-        case "add":
-          await Billing.findByIdAndUpdate(_id, { $set: { insuranceDetails } });
-          break;
-        case "delete":
-          await Billing.findByIdAndUpdate(_id, { $unset: { insuranceDetails: "" } });
-          break;
-        case "update":
-          await Billing.findByIdAndUpdate(_id, { $set: { [`insuranceDetails.${changeReq}`]: Value } });
-          break;
-        default:
-          return res.status(400).json({ error: "Invalid operation" });
-      }
-      res.status(202).json({ message: "Insurance details updated successfully" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    const updateOperations = {
+      add: { $set: { insuranceDetails } },
+      delete: { $unset: { insuranceDetails: "" } },
+      update: { $set: { [`insuranceDetails.${changeReq}`]: Value } }
+    };
+
+    if (!updateOperations[availChange]) {
+      return res.status(400).json({ error: "Invalid operation" });
     }
+
+    await Billing.findByIdAndUpdate(_id, updateOperations[availChange]);
+    return res.status(202).json({ message: "Insurance details updated successfully" });
+    
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 });
+
 
 // Delete a bill
 router.delete("/delete/:id", async (req, res) => {

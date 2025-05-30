@@ -25,16 +25,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { name, age, gender, address, contact, appointmentId, medicalHistory } = req.body;
-  const patient = new Patient({
-    name,
-    age,
-    gender,
-    address,
-    contact,
-    appointmentId,
-    medicalHistory,
-  });
+  const patient = new Patient(req.body);
   try {
     await patient.save();
     res.status(201).json(patient);
@@ -57,32 +48,27 @@ router.put("/update/:id", async (req, res) => {
   const id = req.params.id;
   const changeReq = req.query.change;
   const Value = req.body.value;
-  const query = {};
-  if (
-    changeReq == "name" ||
-    changeReq == "age" ||
-    changeReq == "gender" ||
-    changeReq == "contact" ||
-    changeReq == "medicalHistory" ||
-    changeReq == "address" ||
-    changeReq == "appointmentId"
-  ) {
-    Object.defineProperty(query, changeReq, {
-      value: Value,
-      writable: false,
-      enumerable: true,
-      configurable: false,
-    });
-  } else {
-    return res.send(500, { error: "Wrong Selection" });
+
+  if (changeReq === "createdBy") {
+    return res.status(400).json({ message: "Cannot change createdBy" });
   }
-  const _id = new mongoose.mongo.ObjectId(id);
+
+  const updatableFields = [
+    "name", "age", "gender", "contact", 
+    "medicalHistory", "address", "appointmentId", "updatedBy"
+  ];
+
+  if (!updatableFields.includes(changeReq)) {
+    return res.status(500).json({ error: "Wrong Selection" });
+  }
+
   try {
-    await Patient.findByIdAndUpdate(_id, query);
-    res.status(202).json({ message: "Done" });
+    await Patient.findByIdAndUpdate(id, { [changeReq]: Value });
+    return res.status(202).json({ message: "Done" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
+
 
 module.exports = router;

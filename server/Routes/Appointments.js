@@ -12,44 +12,7 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const {
-    patientId,
-    doctorId,
-    appointmentType,
-    appointmentReason,
-    date,
-    time,
-    notes,
-    followUp,
-    followUpDate,
-    followUpTime,
-    followUpNotes,
-    followUpReason,
-    createdBy,
-    updatedBy,
-    updatedAt,
-    appointmentStatus,
-    billnumber,
-  } = req.body;
-  const appointment = new Appointment({
-    patientId,
-    doctorId,
-    appointmentType,
-    appointmentReason,
-    date,
-    time,
-    notes,
-    followUp,
-    followUpDate,
-    followUpTime,
-    followUpNotes,
-    followUpReason,
-    createdBy,
-    updatedBy,
-    updatedAt,
-    appointmentStatus,
-    billnumber,
-  });
+  const appointment = new Appointment(req.body);
   try {
     await appointment.save();
     res.status(201).json(appointment);
@@ -62,6 +25,8 @@ router.put("/update/:id",async (req,res)=>{
    const { id } = req.params;
    const changeReq = req.query.change;
    const Value = req.body.Value;
+     if(changeReq == "createdBy") return res.status(400).json({ message: "Cannot change createdBy" });
+
    try{
     const appointment = await Appointment.findByIdAndUpdate(id, { $set: { [changeReq]: Value }
       }, { new: true });

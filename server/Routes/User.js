@@ -24,21 +24,14 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { name, email, password, role, phone, address, createdBy } = req.body;
-  const user = new User({
-    name,
-    email,
-    password,
-    role,
-    phone,
-    address,
-    createdBy,
-  });
+
+
+  const user = new User(req.body);
   try {
     await user.save();
     res.status(201).json(user);
   } catch (error) {
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ message: error.message });
   }
 });
 router.delete("/delete/:id", async (req, res) => {
@@ -52,11 +45,12 @@ router.delete("/delete/:id", async (req, res) => {
 });
 
 router.put("/update/:id", async (req, res) => {
-  const { id } = req.params;
+  const { id } ``= req.params;
   const changeReq = req.query.change;
   const Value = req.body.value;
 
   try {
+    if(changeReq == "createdBy") return res.status(400).json({ message: "Cannot change createdBy" });
     const user = await User.findByIdAndUpdate(
       id,
       { $set: { [changeReq]: Value } },

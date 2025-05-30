@@ -22,8 +22,7 @@ router.get("/:id",async (req,res)=>{
 })
 
 router.post("/", async (req, res) => {
-  const { name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, appointments ,  availability } = req.body;
-  const doctor = new Doctor({ name, specialization, experience, qualifications, hospitalAffiliations, languageSpoken, contact, appointments ,availability});
+  const doctor = new Doctor(req.body);
   try {
     await doctor.save();
     res.status(201).json(doctor);
@@ -41,56 +40,40 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 router.put("/update/:id", async (req, res) => {
-  const id = req.params["id"];
-  const changeReq = req.query.change;
-  const Value = req.body.value;
-  const availChange = req.body.avail_change;
-  const query = {};
-  // console.log("Value: ", Value);
-  // console.log("ChangeReq: ", changeReq);
-  // console.log("AvailChange: ", availChange);
-  if (
-    changeReq == "name" ||
-    changeReq == "specialization" ||
-    changeReq == "contact" ||
-    changeReq == "experience" ||
-    changeReq == "qualifications" ||
-    changeReq == "hospitalAffiliation"
-  ) {
-    Object.defineProperty(query, changeReq, {
-      value: Value,
-      writable: false,
-      enumerable: true,
-      configurable: false,
-    });
-    try {
-      await Doctor.findByIdAndUpdate(new mongoose.mongo.ObjectId(id), query);
-      res.status(202).json({ message: "Updates Successful" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  }else if(changeReq == "availability" || changeReq == "languagesSpoken" || changeReq == "appointments"){
-    if(availChange == "add"){
-      try {
-        await Doctor.findByIdAndUpdate({_id:id}, {$addToSet:{changeReq:Value}});
-        res.status(202).json({ message: "Updates Successful" });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    }
-    if(availChange == "delete"){
-      try {
-        await Doctor.findByIdAndUpdate({_id:id}, {$pull:{changeReq:Value}});
-        res.status(202).json({ message: "Updates Successful" });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    }
-      
-  }else {
-    res.status(400).send();
+  const id = req.params.id;
+  const { change: changeReq, value: Value, avail_change: availChange } = req.body;
+
+  if (changeReq === "createdBy") {
+    return res.status(400).json({ message: "Cannot change createdBy" });
   }
+
+  const updatableFields = [
+    "name", "specialization", "contact", "experience", 
+    "qualifications", "hospitalAffiliation", "updatedBy"
+  ];
+
+  if (updatableFields.includes(changeReq)) {
+    try {
+      await Doctor.findByIdAndUpdate(id, { [changeReq]: Value });
+      return res.status(202).json({ message: "Updates Successful" });
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
+  if (["availability", "languagesSpoken", "appointments"].includes(changeReq)) {
+    const updateOperation = availChange === "add" ? { $addToSet: { [changeReq]: Value } } : { $pull: { [changeReq]: Value } };
+    try {
+      await Doctor.findByIdAndUpdate(id, updateOperation);
+      return res.status(202).json({ message: "Updates Successful" });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
+  return res.status(400).send();
 });
+
 
 
 module.exports = router;

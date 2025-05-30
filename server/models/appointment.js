@@ -20,5 +20,9 @@ const appointmentSchema = new mongoose.Schema({
   billnumber: { type: String, required: true, unique: true }, // Unique bill number for the appointment
   createdAt: { type: Date, default: Date.now }
 });
+appointmentSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
