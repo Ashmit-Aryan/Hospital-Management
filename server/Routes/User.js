@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!patient) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
     res.json(user);
@@ -24,8 +24,6 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-
-
   const user = new User(req.body);
   try {
     await user.save();
@@ -34,6 +32,7 @@ router.post("/", async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+
 router.delete("/delete/:id", async (req, res) => {
   const deleteUserId = new mongoose.mongo.ObjectId(req.params["id"]);
   try {
