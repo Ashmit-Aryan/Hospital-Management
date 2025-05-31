@@ -6,7 +6,9 @@ const {
   handleUpdateBills,
   handleGetBillsById,
 } = require("../controller/BillingsController");
+const { getUser } = require("../middleware/auth");
 
+router.use(getUser)
 // Get all bills
 router.get("/",handleGetBills);
 

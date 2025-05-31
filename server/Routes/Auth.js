@@ -1,8 +1,9 @@
 const router = require('express').Router();
-const { default: mongoose } = require("mongoose");
+const {handleCreateUser} = require('../controller/UserController')
+const {login} = require('../controller/AuthController');
 
-router.post("/sign-in", )
+router.post("/create-user", handleCreateUser)
 
-router.post("/login",)
+router.post("/login",login);
 
 module.exports = router;

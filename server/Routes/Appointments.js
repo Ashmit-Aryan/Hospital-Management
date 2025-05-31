@@ -5,7 +5,9 @@ const {    handleGetAppointmentsById,
     handleDeleteAppointment,
     handleGetAppointments
 } = require('../controller/AppointmentsController');
+const { getUser } = require("../middleware/auth");
 
+router.use(getUser)
 router.get("/", handleUpdateAppointment);
 
 router.get("/:id",handleGetAppointmentsById);

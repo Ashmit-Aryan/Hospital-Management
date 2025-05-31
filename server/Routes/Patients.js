@@ -5,7 +5,9 @@ const {  handleCreatePatients,
   handleGetPatientsById,
   handleDeletePatients,
   handleUpdatePatients } = require('../controller/PaitentsController');
+const { getUser } = require("../middleware/auth");
 
+router.use(getUser)
 router.get("/", handleGetPatients);
 
 router.get("/:id", handleGetPatientsById);

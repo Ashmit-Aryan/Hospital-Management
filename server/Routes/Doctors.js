@@ -6,6 +6,9 @@ const {
   handleGetDoctorsById,
   handleUpdateDoctors,
 } = require("../controller/DoctorsController");
+const { getUser } = require("../middleware/auth");
+
+router.use(getUser)
 router.get("/", handleGetDoctors);
 router.get("/:id", handleGetDoctorsById);
 router.post("/", handleCreateDoctors);

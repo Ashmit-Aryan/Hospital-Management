@@ -1,64 +1,23 @@
 const router = require("express").Router();
-const { default: mongoose } = require("mongoose");
-const User = require("../models/user");
+const {
+  handleGetUsers,
+  handleCreateUser,
+  handleDeleteUser,
+  handleUpdateUser,
+  handleGetUserById,
+} = require("../controller/UserController");
+const { getUser } = require("../middleware/auth");
 
-router.get("/", async (req, res) => {
-  try {
-    const users = await User.find();
-    res.json(users);
-  } catch (err) {
-    res.sendStatus(500).send({ message: err.message });
-  }
-});
+router.use(getUser)
 
-router.get("/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+router.get("/", handleGetUsers);
 
-router.post("/", async (req, res) => {
-  const user = new User(req.body);
-  try {
-    await user.save();
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
+router.get("/:id", handleGetUserById);
 
-router.delete("/delete/:id", async (req, res) => {
-  const deleteUserId = new mongoose.mongo.ObjectId(req.params["id"]);
-  try {
-    await User.deleteOne({ _id: deleteUserId });
-    res.status(204).json({ message: "Deleted" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.post("/", handleCreateUser);
 
-router.put("/update/:id", async (req, res) => {
-  const { id } = req.params;
-  const changeReq = req.query.change;
-  const Value = req.body.value;
+router.delete("/delete/:id", handleDeleteUser);
 
-  try {
-    if(changeReq == "createdBy") return res.status(400).json({ message: "Cannot change createdBy" });
-    const user = await User.findByIdAndUpdate(
-      id,
-      { $set: { [changeReq]: Value } },
-      { new: true }
-    );
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(400).json({ message: err.message });
-  }
-});
+router.put("/update/:id", handleUpdateUser);
 
 module.exports = router;
