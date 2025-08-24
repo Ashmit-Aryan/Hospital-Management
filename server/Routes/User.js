@@ -6,18 +6,16 @@ const {
   handleUpdateUser,
   handleGetUserById,
 } = require("../controller/UserController");
-const { getUser } = require("../middleware/auth");
+const { verifyAuthToken,setAuth } = require("../middleware/auth");
 
-router.use(getUser)
+router.use(verifyAuthToken)
 
 router.get("/", handleGetUsers);
 
 router.get("/:id", handleGetUserById);
 
-router.post("/", handleCreateUser);
-
 router.delete("/delete/:id", handleDeleteUser);
 
-router.put("/update/:id", handleUpdateUser);
+router.put("/update/:id", setAuth ,handleUpdateUser);
 
 module.exports = router;

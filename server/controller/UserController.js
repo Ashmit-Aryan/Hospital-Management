@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const User = require("../models/user");
-const bcryptjs = require('bcryptjs');
+const bcryptjs = require("bcryptjs");
 
 async function handleGetUsers(req, res) {
   try {
@@ -25,20 +25,21 @@ async function handleGetUserById(req, res) {
 }
 
 async function handleCreateUser(req, res) {
-   const emailExist = await User.findOne({email:req.body.email});
-    if(emailExist) return res.status(400).json({message:'Email already exist'});
+  const emailExist = await User.findOne({ email: req.body.email });
+  if (emailExist)
+    return res.status(400).json({ message: "Email already exist" });
 
-    const hash = await bcryptjs.hashSync(req.body.password,10);
+  const hash = await bcryptjs.hashSync(req.body.password, 10);
 
-    req.body.password = hash;
+  req.body.password = hash;
 
-    const user = new User(req.body);
-    try {
-       const savedUser = await user.save();
-        return res.status(201).send({ user: savedUser });
-    } catch (error) {
-        return res.status(500).send({ message: error });
-    }
+  const user = new User(req.body);
+  try {
+    const savedUser = await user.save();
+    return res.status(201).send({ user: savedUser });
+  } catch (error) {
+    return res.status(500).send({ message: error });
+  }
 }
 
 async function handleUpdateUser(req, res) {
@@ -47,8 +48,20 @@ async function handleUpdateUser(req, res) {
   const Value = req.body.value;
 
   try {
-    if (changeReq == "createdBy")
+    if (changeReq == "createdBy") {
       return res.status(400).json({ message: "Cannot change createdBy" });
+    } else if (changeReq == "roles") {
+      const updateOperation =
+        availChange === "add"
+          ? { $addToSet: { [changeReq]: Value } }
+          : { $pull: { [changeReq]: Value } };
+      try {
+        await User.findByIdAndUpdate(id, updateOperation);
+        return res.status(202).json({ message: "Updates Successful" });
+      } catch (error) {
+        return res.status(500).json({ error: error.message });
+      }
+    }
     const user = await User.findByIdAndUpdate(
       id,
       { $set: { [changeReq]: Value } },
@@ -71,9 +84,9 @@ async function handleDeleteUser(req, res) {
 }
 
 module.exports = {
-    handleGetUsers,
-    handleCreateUser,
-    handleDeleteUser,
-    handleUpdateUser,
-    handleGetUserById
-}
+  handleGetUsers,
+  handleCreateUser,
+  handleDeleteUser,
+  handleUpdateUser,
+  handleGetUserById,
+};

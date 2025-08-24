@@ -5,9 +5,9 @@ const {    handleGetAppointmentsById,
     handleDeleteAppointment,
     handleGetAppointments
 } = require('../controller/AppointmentsController');
-const { getUser } = require("../middleware/auth");
+const { verifyAuthToken,setAuth } = require("../middleware/auth");
 
-router.use(getUser)
+router.use(verifyAuthToken)
 router.get("/", handleUpdateAppointment);
 
 router.get("/:id",handleGetAppointmentsById);
@@ -16,6 +16,6 @@ router.post("/", handleCreateAppointment);
 
 router.put("/update/:id",handleUpdateAppointment)
 
-router.delete("/delete/:id", handleDeleteAppointment);
+router.delete("/delete/:id", setAuth,handleDeleteAppointment);
 
 module.exports = router;

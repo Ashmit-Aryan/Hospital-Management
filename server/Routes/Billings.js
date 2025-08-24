@@ -6,9 +6,9 @@ const {
   handleUpdateBills,
   handleGetBillsById,
 } = require("../controller/BillingsController");
-const { getUser } = require("../middleware/auth");
+const { verifyAuthToken,setAuth } = require("../middleware/auth");
 
-router.use(getUser)
+router.use(verifyAuthToken)
 // Get all bills
 router.get("/",handleGetBills);
 
@@ -22,7 +22,7 @@ router.post("/",handleCreateBills);
 router.put("/update/:id",handleUpdateBills);
 
 // Delete a bill
-router.delete("/delete/:id",handleDeleteBills);
+router.delete("/delete/:id",setAuth,handleDeleteBills);
 
 module.exports = router;
 
