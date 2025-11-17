@@ -8,13 +8,13 @@ const {  handleCreatePatients,
 const { verifyAuthToken,setAuth } = require("../middleware/auth");
 
 router.use(verifyAuthToken)
-router.get("/", handleGetPatients);
+router.get("/",handleGetPatients);
 
 router.get("/:id", handleGetPatientsById);
 
-router.post("/", handleCreatePatients);
+router.post("/",setAuth ,handleCreatePatients);
 
-router.delete("/delete/:id", handleDeletePatients);
+router.delete("/delete/:id",setAuth ,handleDeletePatients);
 
 router.put("/update/:id",setAuth ,handleUpdatePatients);
 

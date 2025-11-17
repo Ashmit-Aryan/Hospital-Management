@@ -11,8 +11,8 @@ const { verifyAuthToken,setAuth } = require("../middleware/auth");
 router.use(verifyAuthToken)
 router.get("/", handleGetDoctors);
 router.get("/:id", handleGetDoctorsById);
-router.post("/", handleCreateDoctors);
-router.delete("/delete/:id", handleDeleteDoctors);
+router.post("/", setAuth,handleCreateDoctors);
+router.delete("/delete/:id",setAuth ,handleDeleteDoctors);
 router.put("/update/:id", setAuth ,handleUpdateDoctors);
 
 module.exports = router;

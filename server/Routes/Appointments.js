@@ -12,9 +12,9 @@ router.get("/", handleUpdateAppointment);
 
 router.get("/:id",handleGetAppointmentsById);
 
-router.post("/", handleCreateAppointment);
+router.post("/",setAuth ,handleCreateAppointment);
 
-router.put("/update/:id",handleUpdateAppointment)
+router.put("/update/:id",setAuth,handleUpdateAppointment)
 
 router.delete("/delete/:id", setAuth,handleDeleteAppointment);
 

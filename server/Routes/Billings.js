@@ -16,10 +16,10 @@ router.get("/",handleGetBills);
 router.get("/:id",handleGetBillsById);
 
 // Create a new bill
-router.post("/",handleCreateBills);
+router.post("/",setAuth,handleCreateBills);
 
 // Update a bill
-router.put("/update/:id",handleUpdateBills);
+router.put("/update/:id",setAuth,handleUpdateBills);
 
 // Delete a bill
 router.delete("/delete/:id",setAuth,handleDeleteBills);

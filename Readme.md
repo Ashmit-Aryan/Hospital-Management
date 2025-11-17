@@ -1,6 +1,6 @@
 # Hospital Management System
 
-The **Hospital Management System** is a web-based application designed to facilitate the efficient management of hospital operations. This system provides a comprehensive solution for healthcare facilities, enabling them to manage patient records, appointments, billing, and staff information seamlessly. 
+The **Hospital Management System** is a web-based application designed to facilitate the efficient management of hospital operations. This system provides a comprehensive solution for healthcare facilities, enabling them to manage patient records, appointments, billing, and staff information seamlessly.
 
 ## Key Features
 
@@ -10,7 +10,7 @@ The **Hospital Management System** is a web-based application designed to facili
 - **Staff Management**: Manage healthcare staff information, including roles, schedules, and performance tracking.
 - **Reporting**: Generate reports on various aspects of hospital operations for better decision-making.
 
-*Note:- More Feature will be addded in the future 
+*Note:- More Feature will be addded in the future
 
 ## Technologies Used
 
@@ -39,6 +39,7 @@ This guide provides step-by-step instructions to install MongoDB as a local data
 ## 2. Install MongoDB
 
 ### Windows
+
 1. Run the downloaded `.msi` installer file.
 2. Follow the installation prompts:
    - Select "Complete" setup type.
@@ -46,34 +47,48 @@ This guide provides step-by-step instructions to install MongoDB as a local data
 3. Click **Install** to complete the process.
 
 ### macOS
+
 1. Open the Terminal and use **Homebrew**:
+
    ```bash
    brew tap mongodb/brew
    brew install mongodb-community@6.0
    ```
+
 2. Start MongoDB as a service:
+
    ```bash
    brew services start mongodb/brew/mongodb-community
    ```
 
 ### Linux
+
 1. Import the MongoDB public GPG Key:
+
    ```bash
    wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
    ```
+
 2. Add MongoDB to your package list:
+
    ```bash
    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
    ```
+
 3. Update your local package database:
+
    ```bash
    sudo apt update
    ```
+
 4. Install MongoDB:
+
    ```bash
    sudo apt install -y mongodb-org
    ```
+
 5. Start MongoDB:
+
    ```bash
    sudo systemctl start mongod
    ```
@@ -83,11 +98,13 @@ This guide provides step-by-step instructions to install MongoDB as a local data
 ## 3. Verify the Installation
 
 Run the following command to verify MongoDB is installed and running:
+
 ```bash
 mongod --version
 ```
 
 You can also check if MongoDB is running by connecting to the database shell:
+
 ```bash
 mongosh
 ```

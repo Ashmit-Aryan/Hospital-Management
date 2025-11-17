@@ -15,9 +15,9 @@ function getUser(token){
     }
 }
 
-function setAuthorization(users,roles=[]){
+function setAuthorization(users,role=[]){
     if(!users) return null;
-    if(!roles.includes(users.role)) return 401;
+    if(!role.includes(users.roles)) return 401;
     return 0;
 }
 

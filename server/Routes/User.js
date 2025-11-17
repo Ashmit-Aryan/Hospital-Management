@@ -10,11 +10,11 @@ const { verifyAuthToken,setAuth } = require("../middleware/auth");
 
 router.use(verifyAuthToken)
 
-router.get("/", handleGetUsers);
+router.get("/",handleGetUsers);
 
 router.get("/:id", handleGetUserById);
 
-router.delete("/delete/:id", handleDeleteUser);
+router.delete("/delete/:id", setAuth,handleDeleteUser);
 
 router.put("/update/:id", setAuth ,handleUpdateUser);
 
