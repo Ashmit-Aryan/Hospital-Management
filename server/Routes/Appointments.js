@@ -8,7 +8,7 @@ const {    handleGetAppointmentsById,
 const { verifyAuthToken,setAuth } = require("../middleware/auth");
 
 router.use(verifyAuthToken)
-router.get("/", handleUpdateAppointment);
+router.get("/", handleGetAppointments);
 
 router.get("/:id",handleGetAppointmentsById);
 

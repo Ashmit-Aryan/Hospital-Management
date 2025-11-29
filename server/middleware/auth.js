@@ -15,8 +15,7 @@ function verifyAuthToken(req, res, next) {
 }
 
 function setAuth(req, res, next) {
-  console.log(user);
-  if(setAuthorization(user,["admin"])!= 401){
+  if(setAuthorization(req.user,["admin"])!= 401){
     next()
   }else{
     res.status(401).json({error:"Forbidden"});
