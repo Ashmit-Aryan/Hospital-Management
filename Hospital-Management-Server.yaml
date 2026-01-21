@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: Hospital Management System API
+  description: >
+    REST API for managing users, patients, doctors, appointments, and billings
+    with JWT-based authentication and admin role authorization.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          example: admin@example.com
+        password:
+          type: string
+          example: password123
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    Patient:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        contact:
+          type: string
+
+    Doctor:
+      type: object
+      properties:
+        name:
+          type: string
+        specialization:
+          type: string
+        contact:
+          type: string
+
+    Appointment:
+      type: object
+      properties:
+        patientId:
+          type: string
+        doctorId:
+          type: string
+        appointmentDate:
+          type: string
+          format: date-time
+        reason:
+          type: string
+
+    Billing:
+      type: object
+      properties:
+        patientId:
+          type: string
+        services:
+          type: string
+        paymentStatus:
+          type: string
+          example: Pending
+        paymentMethod:
+          type: string
+        totalAmount:
+          type: number
+        amountPaid:
+          type: number
+        balance:
+          type: number
+        invoiceNumber:
+          type: string
+
+security:
+  - BearerAuth: []
+
+paths:
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/create-user:
+    post:
+      tags: [Users]
+      summary: Create new user (Admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        201:
+          description: User created
+        401:
+          description: Forbidden
+
+  /user:
+    get:
+      tags: [Users]
+      summary: Get all users
+      responses:
+        200:
+          description: List of users
+
+  /user/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User found
+        404:
+          description: User not found
+
+  /user/update/{id}:
+    put:
+      tags: [Users]
+      summary: Update user (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User updated
+        401:
+          description: Forbidden
+
+  /user/delete/{id}:
+    delete:
+      tags: [Users]
+      summary: Delete user (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User deleted
+        401:
+          description: Forbidden
+
+  /patients:
+    get:
+      tags: [Patients]
+      summary: Get all patients
+      responses:
+        200:
+          description: List of patients
+
+    post:
+      tags: [Patients]
+      summary: Create patient (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Patient'
+      responses:
+        201:
+          description: Patient created
+        401:
+          description: Forbidden
+
+  /patients/{id}:
+    get:
+      tags: [Patients]
+      summary: Get patient by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Patient found
+
+  /patients/update/{id}:
+    put:
+      tags: [Patients]
+      summary: Update patient (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Patient updated
+
+  /patients/delete/{id}:
+    delete:
+      tags: [Patients]
+      summary: Delete patient (Admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Patient deleted
+
+  /doctors:
+    get:
+      tags: [Doctors]
+      summary: Get all doctors
+      responses:
+        200:
+          description: List of doctors
+
+    post:
+      tags: [Doctors]
+      summary: Create doctor (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Doctor'
+      responses:
+        201:
+          description: Doctor created
+
+  /appointments:
+    get:
+      tags: [Appointments]
+      summary: Get all appointments
+      responses:
+        200:
+          description: List of appointments
+
+    post:
+      tags: [Appointments]
+      summary: Create appointment (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Appointment'
+      responses:
+        201:
+          description: Appointment created
+
+  /billings:
+    get:
+      tags: [Billings]
+      summary: Get all bills
+      responses:
+        200:
+          description: List of bills
+
+    post:
+      tags: [Billings]
+      summary: Create billing (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Billing'
+      responses:
+        201:
+          description: Bill created
+

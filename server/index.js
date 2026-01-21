@@ -22,11 +22,11 @@ mongoose
 
 //Routes
 const patients = require('./Routes/Patients');
-const doctors = require('./routes/Doctors');
-const appointments = require('./routes/Appointments');
-const billings = require('./routes/Billings');
-const users = require('./routes/User');
-const auth = require('./routes/Auth');
+const doctors = require('./Routes/Doctors');
+const appointments = require('./Routes/Appointments');
+const billings = require('./Routes/Billings');
+const users = require('./Routes/User');
+const auth = require('./Routes/Auth');
 app.use('/api/user',users);
 app.use('/api/patients',patients);
 app.use('/api/doctors',doctors);
