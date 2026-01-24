@@ -6,7 +6,7 @@ function genAuthToken(user) {
 }
 
 function verifyAuthToken(req, res, next) {
-    const token = req.header('Authorization');
+    const token = req.header('Auth');
     if(getUser(token) == null){ return res.status(401).json({error:"Null Token"}); }
     else {
       req.user = getUser(token);
