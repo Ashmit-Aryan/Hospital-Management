@@ -11,7 +11,7 @@ async function handleGetBills(req, res) {
 }
 
 async function handleCreateBills(req, res) {
-  const bill = new Billing(req.body);
+  const bill = new Billing({...req.body, createdBy: req.user._doc._id, updatedBy: req.user._doc._id});
 
   try {
     const savedBill = await bill.save();
@@ -31,57 +31,129 @@ async function handleGetBillsById(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
-
 async function handleDeleteBills(req, res) {
-  const deleteBillId = new mongoose.Types.ObjectId(req.params["id"]);
+  const { id } = req.params;
+
   try {
-    await Billing.deleteOne({ _id: deleteBillId });
-    res.status(204).json({ message: "Deleted" });
+    const deletedBill = await Billing.findByIdAndDelete(id);
+
+    if (!deletedBill) {
+      return res.status(404).json({
+        error: "Billing record not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Billing record deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
+
 
 async function handleUpdateBills(req, res) {
   const { id } = req.params;
   const {
-    change: changeReq,
-    value: Value,
-    avail_change: availChange,
+    change,
+    value,
+    action, // add | update | delete (for insuranceDetails)
     insuranceDetails,
   } = req.body;
-  const _id = new mongoose.Types.ObjectId(id);
 
-  if (changeReq === "createdBy") {
-    return res.status(400).json({ message: "Cannot change createdBy" });
+  // ❌ Prevent audit tampering
+  if (change === "createdBy") {
+    return res.status(400).json({
+      error: "createdBy cannot be modified",
+    });
   }
 
+  // Fields allowed for direct update
+  const allowedFields = [
+    "services",
+    "paymentStatus",
+    "paymentMethod",
+    "discount",
+    "tax",
+    "totalAmount",
+    "amountPaid",
+    "dueDate",
+    "paymentDate",
+    "notes",
+  ];
+
   try {
-    if (changeReq !== "InsuranceDetails") {
+    // ==============================
+    // NORMAL FIELD UPDATE
+    // ==============================
+    if (change !== "insuranceDetails") {
+      if (!allowedFields.includes(change)) {
+        return res.status(400).json({
+          error: "Invalid field update",
+        });
+      }
+
       await Billing.findByIdAndUpdate(
-        _id,
-        { [changeReq]: Value },
-        { new: true }
+        id,
+        {
+          [change]: value,
+          updatedBy: req.user._doc._id,
+        },
+        { runValidators: true }
       );
-      return res.status(202).json({ message: "Update successful" });
+
+      return res.status(200).json({
+        message: "Billing updated successfully",
+      });
     }
 
-    const updateOperations = {
-      add: { $set: { insuranceDetails } },
-      delete: { $unset: { insuranceDetails: "" } },
-      update: { $set: { [`insuranceDetails.${changeReq}`]: Value } },
+    // ==============================
+    // INSURANCE DETAILS UPDATE
+    // ==============================
+    let updateOperation;
+
+    switch (action) {
+      case "add":
+        updateOperation = {
+          $set: { insuranceDetails },
+          $setOnInsert: {},
+        };
+        break;
+
+      case "update":
+        updateOperation = {
+          $set: { insuranceDetails },
+        };
+        break;
+
+      case "delete":
+        updateOperation = {
+          $unset: { insuranceDetails: "" },
+        };
+        break;
+
+      default:
+        return res.status(400).json({
+          error: "Invalid insuranceDetails action",
+        });
+    }
+
+    updateOperation.$set = {
+      ...(updateOperation.$set || {}),
+      updatedBy: req.user._doc._id,
     };
 
-    if (!updateOperations[availChange]) {
-      return res.status(400).json({ error: "Invalid operation" });
-    }
+    await Billing.findByIdAndUpdate(id, updateOperation);
 
-    await Billing.findByIdAndUpdate(_id, updateOperations[availChange]);
-    return res
-      .status(202)
-      .json({ message: "Insurance details updated successfully" });
+    return res.status(200).json({
+      message: "Insurance details updated successfully",
+    });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
 

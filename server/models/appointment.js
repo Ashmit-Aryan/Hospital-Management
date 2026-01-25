@@ -5,7 +5,7 @@ const appointmentSchema = new mongoose.Schema({
   doctorId: {type:String,required:true},
   appointmentType: { type: String, enum: ['In-Person', 'Telemedicine'], default: 'In-Person' },
   appointmentReason: { type: String, required: true },
-  date: { type: Date, required: true },
+  date: { type: String, required: true },
   time: { type: String, required: true }, // Consider using a DateTime type for better handling
   notes: { type: String },
   followUp: { type: Boolean, default: false },

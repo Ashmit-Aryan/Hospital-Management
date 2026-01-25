@@ -6,10 +6,10 @@ const doctorSchema = new mongoose.Schema({
   experience: { type: Number, required: true }, // in years
   qualifications: { type: String, required: true },
   hospitalAffiliation: { type: String, required: true },
-  languagesSpoken: [String], // Array of languages
+  languagesSpoken: {type:[String],required:true}, // Array of languages
   contact: { type: String, required: true },
-  appointments: [String],
-  availability: [String], // Array of available days/times
+  appointments: {type:[String],required:true},
+  availability: {type:[String],required:true}, // Array of available days/times
   createdAt: { type: Date, default: Date.now },
   createdBy: { type: mongoose.mongo.ObjectId, required: true },
   updatedBy: { type: mongoose.mongo.ObjectId, required: true },

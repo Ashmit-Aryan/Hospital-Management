@@ -7,7 +7,7 @@ const patientSchema = new mongoose.Schema({
   gender: {type:String,required:true},
   address: {type:String,required:true},
   contact: {type:String,required:true},
-  appointmentId:{type:String,required:true},
+  appointmentId:{type:[String]},
   medicalHistory: {type:String,required:true},
   createdAt: { type: Date, default: Date.now },
   createdBy:{type:mongoose.mongo.ObjectId,required:true},

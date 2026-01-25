@@ -21,7 +21,7 @@ async function handleGetDoctorsById(req,res){
 }
 
 async function handleCreateDoctors(req,res){
-    const doctor = new Doctor(req.body);
+    const doctor = new Doctor({...req.body, createdBy: req.user._doc._id, updatedBy: req.user._doc._id});
   try {
     await doctor.save();
     res.status(201).json(doctor);
@@ -30,48 +30,127 @@ async function handleCreateDoctors(req,res){
   }
 }
 
-async function handleDeleteDoctors(req,res){
-    try {
-    await Doctor.deleteOne({ _id: req.params["id"] });
-    res.status(204).json({ message: "Deleted" });
+async function handleDeleteDoctors(req, res) {
+  const { id } = req.params;
+
+  try {
+    const deletedDoctor = await Doctor.findByIdAndDelete(id);
+
+    if (!deletedDoctor) {
+      return res.status(404).json({
+        error: "Doctor not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Doctor deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
 
-async function handleUpdateDoctors(req,res){
-     const id = req.params.id;
-  const { change: changeReq, value: Value, avail_change: availChange } = req.body;
+async function handleUpdateDoctors(req, res) {
+  const { id } = req.params;
+  const updates = req.body;
 
-  if (changeReq === "createdBy") {
-    return res.status(400).json({ message: "Cannot change createdBy" });
+  // ❌ Block audit tampering
+  if ("createdBy" in updates) {
+    return res.status(400).json({
+      error: "createdBy cannot be modified",
+    });
   }
 
-  const updatableFields = [
-    "name", "specialization", "contact", "experience", 
-    "qualifications", "hospitalAffiliation", "updatedBy"
+  // Scalar fields allowed
+  const allowedScalarFields = [
+    "name",
+    "specialization",
+    "contact",
+    "experience",
+    "qualifications",
+    "hospitalAffiliation",
   ];
 
-  if (updatableFields.includes(changeReq)) {
-    try {
-      await Doctor.findByIdAndUpdate(id, { [changeReq]: Value });
-      return res.status(202).json({ message: "Updates Successful" });
-    } catch (error) {
-      return res.status(500).json({ message: error.message });
+  // Array fields allowed
+  const allowedArrayFields = [
+    "availability",
+    "languagesSpoken",
+    "appointments",
+  ];
+
+  const updatePayload = {};
+  const arrayOperations = {};
+
+  // Process scalar updates
+  for (const key of allowedScalarFields) {
+    if (key in updates) {
+      updatePayload[key] = updates[key];
     }
   }
 
-  if (["availability", "languagesSpoken", "appointments"].includes(changeReq)) {
-    const updateOperation = availChange === "add" ? { $addToSet: { [changeReq]: Value } } : { $pull: { [changeReq]: Value } };
-    try {
-      await Doctor.findByIdAndUpdate(id, updateOperation);
-      return res.status(202).json({ message: "Updates Successful" });
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
+  // Process array updates
+  for (const key of allowedArrayFields) {
+    if (key in updates) {
+      const { action, value } = updates[key];
+
+      if (!["add", "remove"].includes(action)) {
+        return res.status(400).json({
+          error: `Invalid action for ${key}`,
+        });
+      }
+
+      arrayOperations[key] =
+        action === "add"
+          ? { $addToSet: { [key]: value } }
+          : { $pull: { [key]: value } };
     }
   }
 
-  return res.status(400).send();
+  // ❌ Nothing valid provided
+  if (
+    Object.keys(updatePayload).length === 0 &&
+    Object.keys(arrayOperations).length === 0
+  ) {
+    return res.status(400).json({
+      error: "No valid fields to update",
+    });
+  }
+
+  // ✅ Backend-controlled audit field
+  updatePayload.updatedBy = req.user._doc._id;
+
+  try {
+    // Apply scalar updates
+    if (Object.keys(updatePayload).length > 0) {
+      await Doctor.findByIdAndUpdate(id, updatePayload, {
+        runValidators: true,
+      });
+    }
+
+    // Apply array updates
+    for (const op of Object.values(arrayOperations)) {
+      await Doctor.findByIdAndUpdate(id, op);
+    }
+
+    const updatedDoctor = await Doctor.findById(id);
+
+    if (!updatedDoctor) {
+      return res.status(404).json({
+        error: "Doctor not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Doctor updated successfully",
+      doctor: updatedDoctor,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
 }
 
 module.exports = {

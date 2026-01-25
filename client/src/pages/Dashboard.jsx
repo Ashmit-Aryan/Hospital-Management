@@ -1,78 +1,102 @@
-import React from 'react';
+import { useEffect, useState } from "react";
 import {
+  Box,
   Grid,
   Paper,
   Typography,
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-} from '@mui/material';
+} from "@mui/material";
 import {
-  People as PeopleIcon,
-  MedicalServices as MedicalServicesIcon,
-  CalendarToday as CalendarIcon,
-  Receipt as ReceiptIcon,
-} from '@mui/icons-material';
-import AppointmentList from '../components/Appointments/AppointmentList';
-import PatientList from '../components/Patients/PatientList';
+  People,
+  LocalHospital,
+  EventAvailable,
+  ReceiptLong,
+} from "@mui/icons-material";
 
-const StatCard = ({ title, value, icon, color }) => (
-  <Card>
-    <CardContent>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box>
-          <Typography color="textSecondary" gutterBottom>
-            {title}
-          </Typography>
-          <Typography variant="h4">{value}</Typography>
-        </Box>
-        <Box sx={{ color: `${color}.main` }}>
-          {icon}
-        </Box>
-      </Box>
-    </CardContent>
-  </Card>
+const DashboardCard = ({ title, value, icon }) => (
+  <Paper
+    elevation={4}
+    sx={{
+      p: 3,
+      display: "flex",
+      alignItems: "center",
+      gap: 2,
+    }}
+  >
+    {icon}
+    <Box>
+      <Typography variant="body2" color="text.secondary">
+        {title}
+      </Typography>
+      <Typography variant="h5" fontWeight={600}>
+        {value}
+      </Typography>
+    </Box>
+  </Paper>
 );
 
 const Dashboard = () => {
-  const stats = [
-    { title: 'Total Patients', value: '1,234', icon: <PeopleIcon fontSize="large" />, color: 'primary' },
-    { title: 'Total Doctors', value: '45', icon: <MedicalServicesIcon fontSize="large" />, color: 'secondary' },
-    { title: 'Today\'s Appointments', value: '23', icon: <CalendarIcon fontSize="large" />, color: 'success' },
-    { title: 'Pending Bills', value: '12', icon: <ReceiptIcon fontSize="large" />, color: 'warning' },
-  ];
+  // Later you can replace these with API calls
+  const [stats, setStats] = useState({
+    patients: 0,
+    doctors: 0,
+    appointments: 0,
+    bills: 0,
+  });
+
+  useEffect(() => {
+    // Placeholder – safe default
+    // You can later fetch counts from backend
+    
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStats({
+      patients: 124,
+      doctors: 18,
+      appointments: 42,
+      bills: 31,
+    });
+  }, []);
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" fontWeight={600} gutterBottom>
         Dashboard
       </Typography>
-      
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <StatCard {...stat} />
-          </Grid>
-        ))}
-      </Grid>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Appointments
-            </Typography>
-            <AppointmentList/>
-          </Paper>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        Hospital Management System Overview
+      </Typography>
+
+      <Grid container spacing={3} mt={1}>
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard
+            title="Total Patients"
+            value={stats.patients}
+            icon={<People color="primary" fontSize="large" />}
+          />
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Recent Patients
-            </Typography>
-            <PatientList />
-          </Paper>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard
+            title="Doctors"
+            value={stats.doctors}
+            icon={<LocalHospital color="success" fontSize="large" />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard
+            title="Appointments"
+            value={stats.appointments}
+            icon={<EventAvailable color="warning" fontSize="large" />}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <DashboardCard
+            title="Pending Bills"
+            value={stats.bills}
+            icon={<ReceiptLong color="error" fontSize="large" />}
+          />
         </Grid>
       </Grid>
     </Box>

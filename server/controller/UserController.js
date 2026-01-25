@@ -41,35 +41,104 @@ async function handleCreateUser(req, res) {
     return res.status(500).send({ message: error });
   }
 }
-
 async function handleUpdateUser(req, res) {
   const { id } = req.params;
-  const changeReq = req.query.change;
-  const Value = req.body.value;
+  const updates = req.body;
+
+  // ❌ Block audit fields
+  if ("createdBy" in updates) {
+    return res.status(400).json({
+      error: "createdBy cannot be modified",
+    });
+  }
+
+  // Scalar fields allowed
+  const allowedScalarFields = [
+    "name",
+    "email",
+    "phone",
+    "address",
+  ];
+
+  // Array fields (RBAC)
+  const allowedArrayFields = ["roles"];
+
+  const updatePayload = {};
+  const arrayOperations = [];
+
+  // Handle scalar updates
+  for (const key of allowedScalarFields) {
+    if (key in updates) {
+      updatePayload[key] = updates[key];
+    }
+  }
+
+  // Handle array updates
+  for (const key of allowedArrayFields) {
+    if (key in updates) {
+      const { action, value } = updates[key];
+
+      if (!["add", "remove"].includes(action)) {
+        return res.status(400).json({
+          error: `Invalid action for ${key}`,
+        });
+      }
+
+      arrayOperations.push(
+        action === "add"
+          ? { $addToSet: { [key]: value } }
+          : { $pull: { [key]: value } }
+      );
+    }
+  }
+
+  // ❌ Nothing to update
+  if (
+    Object.keys(updatePayload).length === 0 &&
+    arrayOperations.length === 0
+  ) {
+    return res.status(400).json({
+      error: "No valid fields to update",
+    });
+  }
 
   try {
-    if (changeReq == "createdBy") {
-      return res.status(400).json({ message: "Cannot change createdBy" });
-    } else if (changeReq == "roles") {
-      const updateOperation =
-        availChange === "add"
-          ? { $addToSet: { [changeReq]: Value } }
-          : { $pull: { [changeReq]: Value } };
-      try {
-        await User.findByIdAndUpdate(id, updateOperation);
-        return res.status(202).json({ message: "Updates Successful" });
-      } catch (error) {
-        return res.status(500).json({ error: error.message });
-      }
+    // ✅ Apply scalar updates + updatedBy
+    if (Object.keys(updatePayload).length > 0) {
+      await User.findByIdAndUpdate(
+        id,
+        {
+          ...updatePayload,
+          updatedBy: req.user._id,
+        },
+        { runValidators: true }
+      );
     }
-    const user = await User.findByIdAndUpdate(
-      id,
-      { $set: { [changeReq]: Value } },
-      { new: true }
-    );
-    res.status(200).json(user);
+
+    // ✅ Apply array updates + updatedBy
+    for (const op of arrayOperations) {
+      await User.findByIdAndUpdate(id, {
+        ...op,
+        $set: { updatedBy: req.user._doc._id },
+      });
+    }
+
+    const updatedUser = await User.findById(id);
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user: updatedUser,
+    });
   } catch (error) {
-    res.status(400).json({ message: err.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
 

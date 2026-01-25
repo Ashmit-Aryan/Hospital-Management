@@ -2,7 +2,8 @@ const { default: mongoose } = require("mongoose");
 const Patient = require("../models/patient");
 
 async function handleCreatePatients(req, res) {
-  const patient = new Patient(req.body);
+  console.log(req.user)
+  const patient = new Patient({...req.body, createdBy: req.user._doc._id , updatedBy: req.user._doc._id });
   try {
     await patient.save();
     res.status(201).json(patient);
@@ -41,17 +42,12 @@ async function handleDeletePatients(req, res) {
     res.status(500).json({ message: error.message });
   }
 }
-
 async function handleUpdatePatients(req, res) {
-  const id = req.params.id;
-  const changeReq = req.query.change;
-  const Value = req.body.value;
+  const { id } = req.params;
+  const updates = req.body;
 
-  if (changeReq === "createdBy") {
-    return res.status(400).json({ message: "Cannot change createdBy" });
-  }
-
-  const updatableFields = [
+  // Fields that are allowed to be updated
+  const allowedFields = [
     "name",
     "age",
     "gender",
@@ -59,20 +55,57 @@ async function handleUpdatePatients(req, res) {
     "medicalHistory",
     "address",
     "appointmentId",
-    "updatedBy",
   ];
 
-  if (!updatableFields.includes(changeReq)) {
-    return res.status(500).json({ error: "Wrong Selection" });
+  // ❌ Block createdBy explicitly
+  if ("createdBy" in updates) {
+    return res.status(400).json({
+      error: "createdBy cannot be modified",
+    });
   }
 
+  // Filter only allowed fields
+  const sanitizedUpdates = {};
+  for (const key of Object.keys(updates)) {
+    if (allowedFields.includes(key)) {
+      sanitizedUpdates[key] = updates[key];
+    }
+  }
+
+  // ❌ No valid fields provided
+  if (Object.keys(sanitizedUpdates).length === 0) {
+    return res.status(400).json({
+      error: "No valid fields to update",
+    });
+  }
+
+  // ✅ Backend-controlled audit field
+  sanitizedUpdates.updatedBy = req.user._doc._id;
+
   try {
-    await Patient.findByIdAndUpdate(id, { [changeReq]: Value });
-    return res.status(202).json({ message: "Done" });
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      id,
+      sanitizedUpdates,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPatient) {
+      return res.status(404).json({
+        error: "Patient not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Patient updated successfully",
+      patient: updatedPatient,
+    });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
+
 
 module.exports = {
   handleCreatePatients,
