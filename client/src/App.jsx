@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Login from "./pages/Login";
 import Patients from "./pages/Patients";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -33,6 +34,7 @@ const App = () => (
         <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
+    <Analytics />
   </BrowserRouter>
 );
 
