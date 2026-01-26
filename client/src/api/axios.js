@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://hospital-management-api-kohl.vercel.app/api",
   headers: { "Content-Type": "application/json" },
 });
 //https://hospital-management-api-kohl.vercel.app/
