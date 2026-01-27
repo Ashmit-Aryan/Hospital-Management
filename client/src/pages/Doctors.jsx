@@ -56,15 +56,15 @@ export default function Doctors() {
   }, []);
 
   /* ================= NORMALIZE ================= */
-  const normalizePayload = (data) => ({
-    ...data,
-    experience: Number(data.experience),
-    languagesSpoken: data.languagesSpoken
-      .split(",")
-      .map((l) => l.trim())
-      .filter(Boolean),
-  });
-
+const normalizePayload = (data) => ({
+  ...data,
+  experience: Number(data.experience),
+  languagesSpoken: data.languagesSpoken
+    .split(",")
+    .map(l => l.trim())
+    .filter(Boolean),
+  availability: data.availability,   // ✅ KEEP AS ARRAY OF OBJECTS
+});
   /* ================= CREATE ================= */
   const handleCreate = async () => {
     await createDoctor(normalizePayload(form));

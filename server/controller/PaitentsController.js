@@ -3,7 +3,7 @@ const Patient = require("../models/patient");
 
 async function handleCreatePatients(req, res) {
   console.log(req.user)
-  const patient = new Patient({...req.body, createdBy: req.user._doc._id , updatedBy: req.user._doc._id });
+  const patient = new Patient({...req.body, createdBy: req.user._id , updatedBy: req.user._id });
   try {
     await patient.save();
     res.status(201).json(patient);
@@ -80,7 +80,7 @@ async function handleUpdatePatients(req, res) {
   }
 
   // ✅ Backend-controlled audit field
-  sanitizedUpdates.updatedBy = req.user._doc._id;
+  sanitizedUpdates.updatedBy = req.user._id;
 
   try {
     const updatedPatient = await Patient.findByIdAndUpdate(

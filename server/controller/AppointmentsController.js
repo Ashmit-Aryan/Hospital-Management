@@ -82,14 +82,14 @@ async function handleCreateAppointment(req, res) {
     // 1️⃣ Create appointment
     const appointment = await Appointment.create({
       ...req.body,
-      createdBy: req.user._doc._id,
-      updatedBy: req.user._doc._id,
+      createdBy: req.user._id,
+      updatedBy: req.user._id,
     });
 
     // 2️⃣ Update patient
     await Patient.findByIdAndUpdate(patientId, {
       $addToSet: { appointmentId: appointment._id },
-      updatedBy: req.user._doc._id,
+      updatedBy: req.user._id,
     });
 
     // 3️⃣ Update doctor
@@ -101,7 +101,7 @@ async function handleCreateAppointment(req, res) {
           startTime: time,
         },
       },
-      updatedBy: req.user._doc._id,
+      updatedBy: req.user._id,
     });
 
     return res.status(201).json(appointment);
@@ -150,7 +150,7 @@ async function handleUpdateAppointment(req, res) {
   }
 
   // ✅ Audit field set by backend
-  sanitizedUpdates.updatedBy = req.user._doc._id;
+  sanitizedUpdates.updatedBy = req.user._id;
 
   try {
     const updatedAppointment = await Appointment.findByIdAndUpdate(

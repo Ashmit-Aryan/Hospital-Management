@@ -25,20 +25,24 @@ async function handleGetUserById(req, res) {
 }
 
 async function handleCreateUser(req, res) {
-  const emailExist = await User.findOne({ email: req.body.email });
+ const emailExist = await User.findOne({ email: req.body.email });
   if (emailExist)
     return res.status(400).json({ message: "Email already exist" });
 
-  const hash = await bcryptjs.hashSync(req.body.password, 10);
+  const hash = bcryptjs.hashSync(req.body.password, 10);
 
-  req.body.password = hash;
+  const user = new User({
+    ...req.body,
+    password: hash,
+    createdBy: req.user._id,   // ✅ SET
+    updatedBy: req.user._id,   // ✅ SET
+  });
 
-  const user = new User(req.body);
   try {
     const savedUser = await user.save();
-    return res.status(201).send({ user: savedUser });
+    return res.status(201).json({ user: savedUser });
   } catch (error) {
-    return res.status(500).send({ message: error });
+    return res.status(500).json({ message: error.message });
   }
 }
 async function handleUpdateUser(req, res) {
@@ -119,7 +123,7 @@ async function handleUpdateUser(req, res) {
     for (const op of arrayOperations) {
       await User.findByIdAndUpdate(id, {
         ...op,
-        $set: { updatedBy: req.user._doc._id },
+        $set: { updatedBy: req.user._id },
       });
     }
 

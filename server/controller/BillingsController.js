@@ -23,18 +23,49 @@ async function handleCreateBills(req, res) {
       });
     }
 
-    // 2️⃣ Create billing
+    const updatedData = {
+     ...req.body
+    };
+
+    // 3️⃣ BACKEND COMPUTATION (SOURCE OF TRUTH)
+    const totalAmount =
+      updatedData.totalAmount !== undefined
+        ? Number(updatedData.totalAmount)
+        : bill.totalAmount;
+
+    const amountPaid =
+      updatedData.amountPaid !== undefined
+        ? Number(updatedData.amountPaid)
+        : bill.amountPaid;
+
+    const balance = totalAmount - amountPaid;
+
+    let paymentStatus = "Pending";
+    let paymentDate = null;
+
+    if (amountPaid === 0) {
+      paymentStatus = "Pending";
+    } else if (amountPaid < totalAmount) {
+      paymentStatus = "Partially Paid";
+    } else {
+      paymentStatus = "Paid";
+      paymentDate = bill.paymentDate || new Date();
+    }
+
+    updatedData.balance = balance;
+    updatedData.paymentStatus = paymentStatus;
+    updatedData.paymentDate = paymentDate;
     const billing = new Billing({
-      ...req.body,
-      createdBy: req.user._doc._id,
-      updatedBy: req.user._doc._id,
+      ...updatedData,
+      createdBy: req.user._id,
+      updatedBy: req.user._id,
     });
 
     await billing.save();
 
     // 3️⃣ Update appointment with billnumber
     appointment.billId = billing._id;
-    appointment.updatedBy = req.user._doc._id;
+    appointment.updatedBy = req.user._id;
     await appointment.save();
 
     return res.status(201).json({
@@ -81,101 +112,86 @@ async function handleDeleteBills(req, res) {
   }
 }
 
+
 async function handleUpdateBills(req, res) {
   const { id } = req.params;
-  const {
-    change,
-    value,
-    action, // add | update | delete (for insuranceDetails)
-    insuranceDetails,
-  } = req.body;
 
-  // ❌ Prevent audit tampering
-  if (change === "createdBy") {
-    return res.status(400).json({
-      error: "createdBy cannot be modified",
-    });
-  }
-
-  // Fields allowed for direct update
-  const allowedFields = [
-    "services",
+  // ❌ fields never allowed from frontend
+  const forbiddenFields = [
+    "_id",
+    "appointmentId",
+    "patientId",
+    "createdBy",
+    "createdAt",
+    "updatedAt",
+    "invoiceNumber",
+    "balance",
     "paymentStatus",
-    "paymentMethod",
-    "discount",
-    "tax",
-    "totalAmount",
-    "amountPaid",
-    "dueDate",
     "paymentDate",
-    "notes",
   ];
 
+  for (const field of forbiddenFields) {
+    if (field in req.body) {
+      return res.status(400).json({
+        error: `Field '${field}' cannot be updated`,
+      });
+    }
+  }
+
   try {
-    // ==============================
-    // NORMAL FIELD UPDATE
-    // ==============================
-    if (change !== "insuranceDetails") {
-      if (!allowedFields.includes(change)) {
-        return res.status(400).json({
-          error: "Invalid field update",
-        });
-      }
-
-      await Billing.findByIdAndUpdate(
-        id,
-        {
-          [change]: value,
-          updatedBy: req.user._doc._id,
-        },
-        { runValidators: true },
-      );
-
-      return res.status(200).json({
-        message: "Billing updated successfully",
+    // 1️⃣ Fetch existing bill
+    const bill = await Billing.findById(id);
+    if (!bill) {
+      return res.status(404).json({
+        error: "Billing record not found",
       });
     }
 
-    // ==============================
-    // INSURANCE DETAILS UPDATE
-    // ==============================
-    let updateOperation;
-
-    switch (action) {
-      case "add":
-        updateOperation = {
-          $set: { insuranceDetails },
-          $setOnInsert: {},
-        };
-        break;
-
-      case "update":
-        updateOperation = {
-          $set: { insuranceDetails },
-        };
-        break;
-
-      case "delete":
-        updateOperation = {
-          $unset: { insuranceDetails: "" },
-        };
-        break;
-
-      default:
-        return res.status(400).json({
-          error: "Invalid insuranceDetails action",
-        });
-    }
-
-    updateOperation.$set = {
-      ...(updateOperation.$set || {}),
-      updatedBy: req.user._doc._id,
+    // 2️⃣ Merge allowed updates
+    const updatedData = {
+      ...req.body,
+      updatedBy: req.user._id,
     };
 
-    await Billing.findByIdAndUpdate(id, updateOperation);
+    // 3️⃣ BACKEND COMPUTATION (SOURCE OF TRUTH)
+    const totalAmount =
+      updatedData.totalAmount !== undefined
+        ? Number(updatedData.totalAmount)
+        : bill.totalAmount;
+
+    const amountPaid =
+      updatedData.amountPaid !== undefined
+        ? Number(updatedData.amountPaid)
+        : bill.amountPaid;
+
+    const balance = totalAmount - amountPaid;
+
+    let paymentStatus = "Pending";
+    let paymentDate = null;
+
+    if (amountPaid === 0) {
+      paymentStatus = "Pending";
+    } else if (amountPaid < totalAmount) {
+      paymentStatus = "Partially Paid";
+    } else {
+      paymentStatus = "Paid";
+      paymentDate = bill.paymentDate || new Date();
+    }
+
+    updatedData.balance = balance;
+    updatedData.paymentStatus = paymentStatus;
+    updatedData.paymentDate = paymentDate;
+
+    // 4️⃣ Save
+    const updatedBill = await Billing.findByIdAndUpdate(
+      id,
+      updatedData,
+      { new: true, runValidators: true }
+    );
 
     return res.status(200).json({
-      message: "Insurance details updated successfully",
+      message: "Billing updated successfully",
+      billing: updatedBill,
     });
   } catch (error) {
     return res.status(500).json({
@@ -183,6 +199,7 @@ async function handleUpdateBills(req, res) {
     });
   }
 }
+
 
 module.exports = {
   handleGetBills,

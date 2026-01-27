@@ -13,12 +13,11 @@ router.use(verifyAuthToken);
 router.get("/", handleGetAppointments);
 
 router.get("/:id", handleGetAppointmentsById);
-
 router.post("/", setAuth, handleCreateAppointment);
 
 router.put("/update/:id", setAuth, handleUpdateAppointment);
 
 router.delete("/delete/:id", setAuth, handleDeleteAppointment);
-router.patch("/appointments/:id/status", verifyAuthToken, setAuth, updateAppointmentStatus);
+router.patch("/:id/status", setAuth, updateAppointmentStatus);
 
 module.exports = router;

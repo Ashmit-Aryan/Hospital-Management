@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -88,15 +89,35 @@ export default function Appointments() {
       : null,
   });
 
+  const sanitizeAppointmentUpdate = (data) => {
+    const {
+      _id,
+      createdBy,
+      updatedBy,
+      createdAt,
+      updatedAt,
+      appointmentStatus,
+      ...allowed
+    } = data;
+
+    return {
+      ...allowed,
+      updatedBy: undefined, // backend will set this
+    };
+  };
+
   /* ================= CREATE / UPDATE ================= */
   const handleCreate = async () => {
+    setForm({ ...form, billNumber: 0 });
     await createAppointment(normalizePayload(form));
     setForm(emptyForm);
     loadAll();
   };
 
   const handleUpdate = async () => {
-    await updateAppointment(edit._id, normalizePayload(edit));
+    const payload = sanitizeAppointmentUpdate(normalizePayload(edit));
+
+    await updateAppointment(edit._id, payload);
     setEdit(null);
     loadAll();
   };

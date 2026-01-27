@@ -21,7 +21,7 @@ async function handleGetDoctorsById(req,res){
 }
 
 async function handleCreateDoctors(req,res){
-    const doctor = new Doctor({...req.body, createdBy: req.user._doc._id, updatedBy: req.user._doc._id});
+    const doctor = new Doctor({...req.body, createdBy: req.user._id, updatedBy: req.user._id});
   try {
     await doctor.save();
     res.status(201).json(doctor);
@@ -54,92 +54,107 @@ async function handleDeleteDoctors(req, res) {
 
 async function handleUpdateDoctors(req, res) {
   const { id } = req.params;
-  const updates = req.body;
+  const { field, action, value } = req.body;
 
   // ❌ Block audit tampering
-  if ("createdBy" in updates) {
+  if (field === "createdBy") {
     return res.status(400).json({
       error: "createdBy cannot be modified",
     });
   }
 
-  // Scalar fields allowed
-  const allowedScalarFields = [
-    "name",
-    "specialization",
-    "contact",
-    "experience",
-    "qualifications",
-    "hospitalAffiliation",
-  ];
-
-  // Array fields allowed
-  const allowedArrayFields = [
-    "availability",
-    "languagesSpoken",
-    "appointments",
-  ];
-
-  const updatePayload = {};
-  const arrayOperations = {};
-
-  // Process scalar updates
-  for (const key of allowedScalarFields) {
-    if (key in updates) {
-      updatePayload[key] = updates[key];
-    }
-  }
-
-  // Process array updates
-  for (const key of allowedArrayFields) {
-    if (key in updates) {
-      const { action, value } = updates[key];
-
+  try {
+    /* ================= AVAILABILITY (ARRAY OF OBJECTS) ================= */
+    if (field === "availability") {
       if (!["add", "remove"].includes(action)) {
         return res.status(400).json({
-          error: `Invalid action for ${key}`,
+          error: "Invalid availability operation",
         });
       }
 
-      arrayOperations[key] =
+      const updateOp =
         action === "add"
-          ? { $addToSet: { [key]: value } }
-          : { $pull: { [key]: value } };
-    }
-  }
+          ? { $push: { availability: value } }
+          : { $pull: { availability: value } };
 
-  // ❌ Nothing valid provided
-  if (
-    Object.keys(updatePayload).length === 0 &&
-    Object.keys(arrayOperations).length === 0
-  ) {
-    return res.status(400).json({
-      error: "No valid fields to update",
-    });
-  }
+      const updatedDoctor = await Doctor.findByIdAndUpdate(
+        id,
+        {
+          ...updateOp,
+          updatedBy: req.user._id,
+        },
+        { new: true, runValidators: true }
+      );
 
-  // ✅ Backend-controlled audit field
-  updatePayload.updatedBy = req.user._doc._id;
+      if (!updatedDoctor) {
+        return res.status(404).json({ error: "Doctor not found" });
+      }
 
-  try {
-    // Apply scalar updates
-    if (Object.keys(updatePayload).length > 0) {
-      await Doctor.findByIdAndUpdate(id, updatePayload, {
-        runValidators: true,
+      return res.status(200).json({
+        message: "Availability updated successfully",
+        doctor: updatedDoctor,
       });
     }
 
-    // Apply array updates
-    for (const op of Object.values(arrayOperations)) {
-      await Doctor.findByIdAndUpdate(id, op);
+    /* ================= LANGUAGES / APPOINTMENTS (ARRAY OF STRINGS / IDS) ================= */
+    if (["languagesSpoken", "appointments"].includes(field)) {
+      if (!["add", "remove"].includes(action)) {
+        return res.status(400).json({
+          error: "Invalid array operation",
+        });
+      }
+
+      const updateOp =
+        action === "add"
+          ? { $addToSet: { [field]: value } }
+          : { $pull: { [field]: value } };
+
+      const updatedDoctor = await Doctor.findByIdAndUpdate(
+        id,
+        {
+          ...updateOp,
+          updatedBy: req.user._id,
+        },
+        { new: true }
+      );
+
+      if (!updatedDoctor) {
+        return res.status(404).json({ error: "Doctor not found" });
+      }
+
+      return res.status(200).json({
+        message: `${field} updated successfully`,
+        doctor: updatedDoctor,
+      });
     }
 
-    const updatedDoctor = await Doctor.findById(id);
+    /* ================= SCALAR FIELDS ================= */
+    const allowedScalarFields = [
+      "name",
+      "specialization",
+      "contact",
+      "experience",
+      "qualifications",
+      "hospitalAffiliation",
+    ];
+
+    if (!allowedScalarFields.includes(field)) {
+      return res.status(400).json({
+        error: "Invalid field update",
+      });
+    }
+
+    const updatedDoctor = await Doctor.findByIdAndUpdate(
+      id,
+      {
+        [field]: value,
+        updatedBy: req.user._id,
+      },
+      { new: true, runValidators: true }
+    );
 
     if (!updatedDoctor) {
-      return res.status(404).json({
-        error: "Doctor not found",
-      });
+      return res.status(404).json({ error: "Doctor not found" });
     }
 
     return res.status(200).json({

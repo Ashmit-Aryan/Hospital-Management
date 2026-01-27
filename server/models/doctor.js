@@ -9,7 +9,22 @@ const doctorSchema = new mongoose.Schema({
   languagesSpoken: {type:[String],required:true}, // Array of languages
   contact: { type: String, required: true },
   appointments: {type:[String],required:true},
-  availability: {type:[String],required:true}, // Array of available days/times
+  availability: [
+  {
+    date: {
+      type: String,        // YYYY-MM-DD
+      required: true,
+    },
+    startTime: {
+      type: String,        // HH:mm
+      required: true,
+    },
+    endTime: {
+      type: String,        // HH:mm
+      required: true,
+    },
+  },
+], // Array of available days/times
   createdAt: { type: Date, default: Date.now },
   createdBy: { type: mongoose.mongo.ObjectId, required: true },
   updatedBy: { type: mongoose.mongo.ObjectId, required: true },
