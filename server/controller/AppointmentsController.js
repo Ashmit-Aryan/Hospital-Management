@@ -1,5 +1,57 @@
 const Appointment = require("../models/appointment");
 const mongoose = require("mongoose");
+const Patient = require("../models/patient");
+const Doctor = require("../models/doctor");
+
+async function updateAppointmentStatus(req, res) {
+  const { id } = req.params;
+  const { appointmentStatus, cancelReason } = req.body;
+
+  try {
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+
+    // ❌ Only Scheduled can be updated
+    if (appointment.appointmentStatus !== "Scheduled") {
+      return res.status(400).json({
+        error: "Appointment already finalized",
+      });
+    }
+
+    if (!["Completed", "Cancelled"].includes(appointmentStatus)) {
+      return res.status(400).json({ error: "Invalid status update" });
+    }
+
+    appointment.appointmentStatus = appointmentStatus;
+    appointment.updatedBy = req.user._id;
+
+    if (appointmentStatus === "Cancelled") {
+      appointment.cancelReason = cancelReason || "Not specified";
+
+      // 🔁 Restore doctor's availability
+      await Doctor.findByIdAndUpdate(appointment.doctorId, {
+        $push: {
+          availability: {
+            date: appointment.date,
+            startTime: appointment.time,
+            endTime: appointment.endTime,
+          },
+        },
+      });
+    }
+
+    await appointment.save();
+
+    return res.json({
+      message: "Appointment status updated",
+      appointment,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
 
 async function handleGetAppointments(req, res) {
   try {
@@ -24,27 +76,37 @@ async function handleGetAppointmentsById(req, res) {
 }
 
 async function handleCreateAppointment(req, res) {
-   try {
-    const appointment = new Appointment({
+  const { doctorId, patientId, date, time } = req.body;
+
+  try {
+    // 1️⃣ Create appointment
+    const appointment = await Appointment.create({
       ...req.body,
       createdBy: req.user._doc._id,
       updatedBy: req.user._doc._id,
     });
 
-    await appointment.save();
+    // 2️⃣ Update patient
+    await Patient.findByIdAndUpdate(patientId, {
+      $addToSet: { appointmentId: appointment._id },
+      updatedBy: req.user._doc._id,
+    });
 
-    // 🔑 AUTO-SYNC PATIENT
-    await Patient.findByIdAndUpdate(
-      req.body.patientId,
-      {
-        $addToSet: { appointmentId: appointment._id.toString() },
-        updatedBy: req.user._doc._id,
-      }
-    );
+    // 3️⃣ Update doctor
+    await Doctor.findByIdAndUpdate(doctorId, {
+      $addToSet: { appointments: appointment._id },
+      $pull: {
+        availability: {
+          date,
+          startTime: time,
+        },
+      },
+      updatedBy: req.user._doc._id,
+    });
 
-    res.status(201).json(appointment);
+    return res.status(201).json(appointment);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ error: error.message });
   }
 }
 async function handleUpdateAppointment(req, res) {
@@ -130,5 +192,6 @@ module.exports = {
     handleCreateAppointment,
     handleUpdateAppointment,
     handleDeleteAppointment,
-    handleGetAppointments
+    handleGetAppointments,
+    updateAppointmentStatus,
 }

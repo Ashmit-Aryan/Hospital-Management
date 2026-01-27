@@ -7,3 +7,6 @@ export const updateAppointment = (id, data) =>
   api.put(`/appointments/update/${id}`, data);
 export const deleteAppointment = (id) =>
   api.delete(`/appointments/delete/${id}`);
+export const updateAppointmentStatus = (id, payload) =>
+  api.patch(`/appointments/${id}/status`, payload);
+

@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -23,13 +24,23 @@ import {
   getAppointmentsList,
 } from "../api/common.api";
 
+/* ===================== DEFAULT FORM ===================== */
 const emptyForm = {
   patientId: "",
-  billnumber: "",
+  appointmentId: "",
   services: "",
-  totalAmount: "",
-  amountPaid: "",
+  paymentMethod: "Cash",
+  insuranceDetails: {
+    provider: "",
+    policyNumber: "",
+    coverageAmount: 0,
+  },
+  discount: 0,
+  tax: 0,
+  totalAmount: 0,
+  amountPaid: 0,
   dueDate: "",
+  notes: "",
 };
 
 export default function Billings() {
@@ -39,6 +50,7 @@ export default function Billings() {
   const [form, setForm] = useState(emptyForm);
   const [edit, setEdit] = useState(null);
 
+  /* ===================== LOAD & NORMALIZE ===================== */
   const loadAll = async () => {
     const [b, p, a] = await Promise.all([
       getBillings(),
@@ -46,36 +58,88 @@ export default function Billings() {
       getAppointmentsList(),
     ]);
 
-    setRows(b.data.map(x => ({ ...x, id: x._id })));
+    const patientsMap = Object.fromEntries(
+      p.data.map(x => [x._id, x.name])
+    );
+
+    const appointmentsMap = Object.fromEntries(
+      a.data.map(x => [x._id, `${x.date} ${x.time}`])
+    );
+
+    setRows(
+      b.data.map(x => ({
+        ...x,
+        id: x._id,
+        patientName: patientsMap[x.patientId] || "—",
+        appointmentInfo: appointmentsMap[x.appointmentId] || "—",
+      }))
+    );
+
     setPatients(p.data);
     setAppointments(a.data);
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAll();
+  }, []);
 
+  /* ===================== COMPUTED FIELDS ===================== */
+  const computeDerivedFields = (data) => {
+    const total = Number(data.totalAmount);
+    const paid = Number(data.amountPaid);
+    const balance = total - paid;
+
+    let paymentStatus = "Pending";
+    let paymentDate = null;
+
+    if (paid === 0) paymentStatus = "Pending";
+    else if (paid < total) paymentStatus = "Partially Paid";
+    else {
+      paymentStatus = "Paid";
+      paymentDate = new Date().toISOString();
+    }
+
+    return {
+      ...data,
+      balance,
+      paymentStatus,
+      paymentDate,
+      invoiceNumber: data.invoiceNumber || `INV-${Date.now()}`,
+    };
+  };
+
+  /* ===================== CREATE ===================== */
   const handleCreate = async () => {
-    await createBilling(form);
+    const payload = computeDerivedFields(form);
+    await createBilling(payload);
     setForm(emptyForm);
     loadAll();
   };
 
+  /* ===================== UPDATE ===================== */
   const handleUpdate = async () => {
-    await updateBilling(edit._id, edit);
+    const payload = computeDerivedFields(edit);
+    await updateBilling(edit._id, payload);
     setEdit(null);
     loadAll();
   };
 
+  /* ===================== UI ===================== */
   return (
     <Box>
-      {/* CREATE */}
+      <Typography variant="h5" gutterBottom>
+        Billing Management
+      </Typography>
+
+      {/* ===================== CREATE FORM ===================== */}
       <TextField
         select
         label="Patient"
         fullWidth
         margin="normal"
         value={form.patientId}
-        onChange={e =>
+        onChange={(e) =>
           setForm({ ...form, patientId: e.target.value })
         }
       >
@@ -86,58 +150,186 @@ export default function Billings() {
 
       <TextField
         select
-        label="Appointment Bill Number"
+        label="Appointment"
         fullWidth
         margin="normal"
-        value={form.billnumber}
-        onChange={e =>
-          setForm({ ...form, billnumber: e.target.value })
+        value={form.appointmentId}
+        onChange={(e) =>
+          setForm({ ...form, appointmentId: e.target.value })
         }
       >
         {appointments.map(a => (
-          <MenuItem key={a._id} value={a.billnumber}>
-            {a.billnumber}
+          <MenuItem key={a._id} value={a._id}>
+            {a.date} {a.time}
           </MenuItem>
         ))}
       </TextField>
 
-      {Object.keys(emptyForm)
-        .filter(k => !["patientId", "billnumber"].includes(k))
-        .map(k => (
+      <TextField
+        label="Services"
+        fullWidth
+        margin="normal"
+        value={form.services}
+        onChange={(e) =>
+          setForm({ ...form, services: e.target.value })
+        }
+      />
+
+      <TextField
+        select
+        label="Payment Method"
+        fullWidth
+        margin="normal"
+        value={form.paymentMethod}
+        onChange={(e) =>
+          setForm({ ...form, paymentMethod: e.target.value })
+        }
+      >
+        {["Cash", "Credit Card", "Insurance"].map(m => (
+          <MenuItem key={m} value={m}>{m}</MenuItem>
+        ))}
+      </TextField>
+
+      {/* INSURANCE */}
+      {form.paymentMethod === "Insurance" && (
+        <>
           <TextField
-            key={k}
-            label={k}
+            label="Insurance Provider"
             fullWidth
             margin="normal"
-            value={form[k]}
-            onChange={e =>
-              setForm({ ...form, [k]: e.target.value })
+            value={form.insuranceDetails.provider}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                insuranceDetails: {
+                  ...form.insuranceDetails,
+                  provider: e.target.value,
+                },
+              })
             }
           />
-        ))}
+          <TextField
+            label="Policy Number"
+            fullWidth
+            margin="normal"
+            value={form.insuranceDetails.policyNumber}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                insuranceDetails: {
+                  ...form.insuranceDetails,
+                  policyNumber: e.target.value,
+                },
+              })
+            }
+          />
+          <TextField
+            label="Coverage Amount"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={form.insuranceDetails.coverageAmount}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                insuranceDetails: {
+                  ...form.insuranceDetails,
+                  coverageAmount: Number(e.target.value),
+                },
+              })
+            }
+          />
+        </>
+      )}
 
-      <Button variant="contained" onClick={handleCreate}>
-        Create Bill
+      <TextField
+        label="Discount"
+        type="number"
+        fullWidth
+        margin="normal"
+        value={form.discount}
+        onChange={(e) =>
+          setForm({ ...form, discount: Number(e.target.value) })
+        }
+      />
+
+      <TextField
+        label="Tax"
+        type="number"
+        fullWidth
+        margin="normal"
+        value={form.tax}
+        onChange={(e) =>
+          setForm({ ...form, tax: Number(e.target.value) })
+        }
+      />
+
+      <TextField
+        label="Total Amount"
+        type="number"
+        fullWidth
+        margin="normal"
+        value={form.totalAmount}
+        onChange={(e) =>
+          setForm({ ...form, totalAmount: Number(e.target.value) })
+        }
+      />
+
+      <TextField
+        label="Amount Paid"
+        type="number"
+        fullWidth
+        margin="normal"
+        value={form.amountPaid}
+        onChange={(e) =>
+          setForm({ ...form, amountPaid: Number(e.target.value) })
+        }
+      />
+
+      <TextField
+        type="date"
+        label="Due Date"
+        fullWidth
+        margin="normal"
+        InputLabelProps={{ shrink: true }}
+        value={form.dueDate}
+        onChange={(e) =>
+          setForm({ ...form, dueDate: e.target.value })
+        }
+      />
+
+      <TextField
+        label="Notes"
+        fullWidth
+        margin="normal"
+        multiline
+        rows={2}
+        value={form.notes}
+        onChange={(e) =>
+          setForm({ ...form, notes: e.target.value })
+        }
+      />
+
+      <Button variant="contained" sx={{ mt: 2 }} onClick={handleCreate}>
+        Generate Bill
       </Button>
 
-      {/* TABLE */}
-      <Box sx={{ height: 450, mt: 3 }}>
+      {/* ===================== TABLE ===================== */}
+      <Box sx={{ height: 480, mt: 4 }}>
         <DataGrid
           rows={rows}
           columns={[
-            {
-              field: "patientId",
-              headerName: "Patient",
-              flex: 1,
-              valueGetter: p =>
-                patients.find(x => x._id === p.row.patientId)?.name || "—",
-            },
+            { field: "patientName", headerName: "Patient", flex: 1 },
+            { field: "appointmentInfo", headerName: "Appointment", flex: 1 },
+            { field: "invoiceNumber", headerName: "Invoice", width: 170 },
+            { field: "paymentStatus", headerName: "Status", width: 140 },
             { field: "totalAmount", headerName: "Total", width: 120 },
+            { field: "balance", headerName: "Balance", width: 120 },
             {
               field: "actions",
               headerName: "Actions",
               width: 200,
-              renderCell: p => (
+              renderCell: (p) => (
                 <>
                   <Button onClick={() => setEdit(p.row)}>Edit</Button>
                   <Button
@@ -155,28 +347,162 @@ export default function Billings() {
         />
       </Box>
 
-      {/* UPDATE */}
-      <Dialog open={!!edit} onClose={() => setEdit(null)} fullWidth>
+      {/* ===================== UPDATE DIALOG ===================== */}
+      <Dialog open={!!edit} onClose={() => setEdit(null)} fullWidth maxWidth="md">
         <DialogTitle>Edit Billing</DialogTitle>
+
         <DialogContent>
-          {edit &&
-            Object.keys(emptyForm).map(k => (
+          <TextField
+            label="Services"
+            fullWidth
+            margin="normal"
+            value={edit?.services || ""}
+            onChange={(e) =>
+              setEdit({ ...edit, services: e.target.value })
+            }
+          />
+
+          <TextField
+            select
+            label="Payment Method"
+            fullWidth
+            margin="normal"
+            value={edit?.paymentMethod || "Cash"}
+            onChange={(e) =>
+              setEdit({ ...edit, paymentMethod: e.target.value })
+            }
+          >
+            {["Cash", "Credit Card", "Insurance"].map(m => (
+              <MenuItem key={m} value={m}>{m}</MenuItem>
+            ))}
+          </TextField>
+
+          {edit?.paymentMethod === "Insurance" && (
+            <>
               <TextField
-                key={k}
-                label={k}
+                label="Insurance Provider"
                 fullWidth
                 margin="normal"
-                value={edit[k]}
-                onChange={e =>
-                  setEdit({ ...edit, [k]: e.target.value })
+                value={edit.insuranceDetails?.provider || ""}
+                onChange={(e) =>
+                  setEdit({
+                    ...edit,
+                    insuranceDetails: {
+                      ...edit.insuranceDetails,
+                      provider: e.target.value,
+                    },
+                  })
                 }
               />
-            ))}
+
+              <TextField
+                label="Policy Number"
+                fullWidth
+                margin="normal"
+                value={edit.insuranceDetails?.policyNumber || ""}
+                onChange={(e) =>
+                  setEdit({
+                    ...edit,
+                    insuranceDetails: {
+                      ...edit.insuranceDetails,
+                      policyNumber: e.target.value,
+                    },
+                  })
+                }
+              />
+
+              <TextField
+                label="Coverage Amount"
+                type="number"
+                fullWidth
+                margin="normal"
+                value={edit.insuranceDetails?.coverageAmount || 0}
+                onChange={(e) =>
+                  setEdit({
+                    ...edit,
+                    insuranceDetails: {
+                      ...edit.insuranceDetails,
+                      coverageAmount: Number(e.target.value),
+                    },
+                  })
+                }
+              />
+            </>
+          )}
+
+          <TextField
+            label="Discount"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={edit?.discount || 0}
+            onChange={(e) =>
+              setEdit({ ...edit, discount: Number(e.target.value) })
+            }
+          />
+
+          <TextField
+            label="Tax"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={edit?.tax || 0}
+            onChange={(e) =>
+              setEdit({ ...edit, tax: Number(e.target.value) })
+            }
+          />
+
+          <TextField
+            label="Total Amount"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={edit?.totalAmount || 0}
+            onChange={(e) =>
+              setEdit({ ...edit, totalAmount: Number(e.target.value) })
+            }
+          />
+
+          <TextField
+            label="Amount Paid"
+            type="number"
+            fullWidth
+            margin="normal"
+            value={edit?.amountPaid || 0}
+            onChange={(e) =>
+              setEdit({ ...edit, amountPaid: Number(e.target.value) })
+            }
+          />
+
+          <TextField
+            type="date"
+            label="Due Date"
+            fullWidth
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+            value={edit?.dueDate?.slice(0, 10) || ""}
+            onChange={(e) =>
+              setEdit({ ...edit, dueDate: e.target.value })
+            }
+          />
+
+          <TextField
+            label="Notes"
+            fullWidth
+            margin="normal"
+            multiline
+            rows={2}
+            value={edit?.notes || ""}
+            onChange={(e) =>
+              setEdit({ ...edit, notes: e.target.value })
+            }
+          />
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setEdit(null)}>Cancel</Button>
           <Button variant="contained" onClick={handleUpdate}>
-            Update
+            Update Bill
           </Button>
         </DialogActions>
       </Dialog>

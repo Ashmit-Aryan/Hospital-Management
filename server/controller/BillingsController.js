@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Billing = require("../models/billings");
-
 async function handleGetBills(req, res) {
   try {
     const bills = await Billing.find();
@@ -9,15 +8,44 @@ async function handleGetBills(req, res) {
     res.status(500).json({ message: err.message });
   }
 }
+const Appointment = require("../models/appointment");
 
 async function handleCreateBills(req, res) {
-  const bill = new Billing({...req.body, createdBy: req.user._doc._id, updatedBy: req.user._doc._id});
+  const { appointmentId } = req.body;
 
   try {
-    const savedBill = await bill.save();
-    res.status(201).json(savedBill);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    // 1️⃣ Ensure appointment exists
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment || appointment.appointmentStatus !== "Completed") {
+      return res.status(400).json({
+        error: "Billing allowed only for completed appointments",
+      });
+    }
+
+    // 2️⃣ Create billing
+    const billing = new Billing({
+      ...req.body,
+      createdBy: req.user._doc._id,
+      updatedBy: req.user._doc._id,
+    });
+
+    await billing.save();
+
+    // 3️⃣ Update appointment with billnumber
+    appointment.billId = billing._id;
+    appointment.updatedBy = req.user._doc._id;
+    await appointment.save();
+
+    return res.status(201).json({
+      message: "Billing created and appointment updated",
+      billing,
+      appointment,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
 
@@ -52,7 +80,6 @@ async function handleDeleteBills(req, res) {
     });
   }
 }
-
 
 async function handleUpdateBills(req, res) {
   const { id } = req.params;
@@ -101,7 +128,7 @@ async function handleUpdateBills(req, res) {
           [change]: value,
           updatedBy: req.user._doc._id,
         },
-        { runValidators: true }
+        { runValidators: true },
       );
 
       return res.status(200).json({
@@ -158,9 +185,9 @@ async function handleUpdateBills(req, res) {
 }
 
 module.exports = {
-    handleGetBills,
-    handleCreateBills,
-    handleDeleteBills,
-    handleUpdateBills,
-    handleGetBillsById
-}
+  handleGetBills,
+  handleCreateBills,
+  handleDeleteBills,
+  handleUpdateBills,
+  handleGetBillsById,
+};
