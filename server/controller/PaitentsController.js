@@ -13,9 +13,18 @@ async function handleCreatePatients(req, res) {
 }
 
 async function handleGetPatients(req, res) {
-  try {
-    const patients = await Patient.find();
-    res.json(patients);
+  try {  const patients = await Patient.find()
+  .populate({
+    path: "appointmentId",
+    select: "date time appointmentStatus doctorId",
+    populate: {
+      path: "doctorId",
+      select: "name",
+    },
+  })
+  .populate("createdBy", "name")
+  .populate("updatedBy", "name");
+    return res.json(patients);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

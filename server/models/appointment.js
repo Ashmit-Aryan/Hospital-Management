@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema({
   patientId: { type: mongoose.mongo.ObjectId, required: true },
-  doctorId: { type: mongoose.mongo.ObjectId, required: true },
+  doctorId: { type: mongoose.mongo.ObjectId, required: true ,ref:"Doctor"},
   appointmentType: {
     type: String,
     enum: ["In-Person", "Telemedicine"],

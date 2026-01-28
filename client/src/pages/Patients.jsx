@@ -27,6 +27,8 @@ const emptyForm = {
   medicalHistory: "",
 };
 
+// import {getAppointmentById} from "../api/appointments.api";
+
 export default function Patients() {
   const [rows, setRows] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -52,7 +54,6 @@ export default function Patients() {
     setForm(emptyForm);
     loadPatients();
   };
-
   const handleUpdate = async () => {
     await updatePatient(edit._id, normalizePayload(edit));
     setEdit(null);
@@ -66,11 +67,24 @@ export default function Patients() {
     { field: "contact", headerName: "Contact", flex: 1 },
     {
       field: "appointmentId",
-      headerName: "Appointments",
-      flex: 1,
-      valueGetter: (params) => {
-        const ids = params?.row?.appointmentId;
-        return Array.isArray(ids) && ids.length > 0 ? ids.join(", ") : "—";
+      headerName: "Appointments | Doctor",
+      flex: 1.5,
+      renderCell: (params) => {
+        console.log(params.row.appointmentId);
+        const appointments = params.row.appointmentId || [];
+        
+        if (!appointments.length) return "—";
+
+        return (
+          <div>
+            {appointments.map((a) => (
+              <div key={a._id}>
+                {new Date(a.date).toLocaleDateString()}{" "}
+                {a.time} - {a.appointmentStatus} | {a.doctorId ? `Doctor: ${a.doctorId.name}` : "No Doctor Assigned"}
+              </div>
+            ))}
+          </div>
+        );
       },
     },
     {
