@@ -70,7 +70,6 @@ export default function Patients() {
       headerName: "Appointments | Doctor",
       flex: 1.5,
       renderCell: (params) => {
-        console.log(params.row.appointmentId);
         const appointments = params.row.appointmentId || [];
         
         if (!appointments.length) return "—";
