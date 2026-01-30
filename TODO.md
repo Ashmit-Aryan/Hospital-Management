@@ -5,5 +5,5 @@
 3. Add Users forms only for admin Done
 4. Dashboard 
 5. Network Error Bug - Production (Done) 
-6. Billings Appointment Bug
-7. Appointment Date Bug
+6. Billings Appointment Bug - Working
+7. Appointment Date Bug - Working 
