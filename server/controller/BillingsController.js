@@ -2,12 +2,33 @@ const mongoose = require("mongoose");
 const Billing = require("../models/billings");
 async function handleGetBills(req, res) {
   try {
-    const bills = await Billing.find();
-    res.json(bills);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const billings = await Billing.find()
+      .populate({
+        path: "appointmentId",
+        model: "Appointment",
+        select: "date time patientId doctorId appointmentStatus",
+        populate: [
+          {
+            path: "patientId",
+            model: "Patient",
+            select: "name",
+          },
+          {
+            path: "doctorId",
+            model: "Doctor",
+            select: "name",
+          },
+        ],
+      })
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name");
+
+    return res.status(200).json(billings);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 }
+
 const Appointment = require("../models/appointment");
 
 async function handleCreateBills(req, res) {

@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, model } = require("mongoose");
 const Patient = require("../models/patient");
 
 async function handleCreatePatients(req, res) {
@@ -16,9 +16,11 @@ async function handleGetPatients(req, res) {
   try {  const patients = await Patient.find()
   .populate({
     path: "appointmentId",
+    model: "Appointment",
     select: "date time appointmentStatus doctorId",
     populate: {
       path: "doctorId",
+      model: "Doctor",
       select: "name",
     },
   })

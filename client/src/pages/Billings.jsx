@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -10,6 +9,7 @@ import {
   DialogContent,
   DialogActions,
   Typography,
+  Chip,
   Divider,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
@@ -71,7 +71,6 @@ export default function Billings() {
         appointmentInfo: appointmentsMap[x.appointmentId] || "—",
       })),
     );
-
     setPatients(p.data);
     setAppointments(a.data);
   };
@@ -90,24 +89,24 @@ export default function Billings() {
   };
 
   /* ================= UPDATE ================= */
-const handleUpdate = async () => {
-  // clone edit state
-  const payload = {
-    services: edit.services,
-    paymentMethod: edit.paymentMethod,
-    insuranceDetails: edit.insuranceDetails,
-    discount: edit.discount,
-    tax: edit.tax,
-    totalAmount: edit.totalAmount,
-    amountPaid: edit.amountPaid,
-    dueDate: edit.dueDate,
-    notes: edit.notes,
-  };
+  const handleUpdate = async () => {
+    // clone edit state
+    const payload = {
+      services: edit.services,
+      paymentMethod: edit.paymentMethod,
+      insuranceDetails: edit.insuranceDetails,
+      discount: edit.discount,
+      tax: edit.tax,
+      totalAmount: edit.totalAmount,
+      amountPaid: edit.amountPaid,
+      dueDate: edit.dueDate,
+      notes: edit.notes,
+    };
 
-  await updateBilling(edit._id, payload);
-  setEdit(null);
-  loadAll();
-};
+    await updateBilling(edit._id, payload);
+    setEdit(null);
+    loadAll();
+  };
   /* ================= UI ================= */
   return (
     <Box>
@@ -289,32 +288,96 @@ const handleUpdate = async () => {
         <DataGrid
           rows={rows}
           columns={[
-            { field: "patientName", headerName: "Patient", flex: 1 },
-            { field: "appointmentInfo", headerName: "Appointment", flex: 1 },
-            { field: "invoiceNumber", headerName: "Invoice", width: 170 },
-            { field: "paymentStatus", headerName: "Status", width: 140 },
-            { field: "balance", headerName: "Balance", width: 120 },
             {
-              field: "actions",
+              field: "invoiceNumber",
+              headerName: "Invoice",
+              flex: 1,
+            },
+            {
+              field: "appointmentDate",
+              headerName: "Date",
+              flex: 1,
+              renderCell: (params) =>
+                params.row.appointmentId?.date
+                  ? new Date(params.row.appointmentId.date).toLocaleDateString()
+                  : "—",
+            },
+            {
+              field: "appointmentTime",
+              headerName: "Time",
+              flex: 1,
+              renderCell: (params) => params.row.appointmentId?.time || "—",
+            },
+            {
+              field: "patient",
+              headerName: "Patient",
+              flex: 1.5,
+              renderCell: (params) =>
+                params.row.appointmentId?.patientId?.name || "—",
+            },
+            {
+              field: "doctor",
+              headerName: "Doctor",
+              flex: 1.5,
+              renderCell: (params) =>
+                params.row.appointmentId?.doctorId?.name
+                  ? `Dr. ${params.row.appointmentId.doctorId.name}`
+                  : "—",
+            },
+            {
+              field: "paymentStatus",
+              headerName: "Status",
+              flex: 1,
+              renderCell: (params) => (
+                <Chip
+                  label={params.value}
+                  size="small"
+                  color={
+                    params.value === "Paid"
+                      ? "success"
+                      : params.value === "Pending"
+                        ? "warning"
+                        : "default"
+                  }
+                />
+              ),
+            },
+            {
+              field: "totalAmount",
+              headerName: "Total",
+              flex: 1,
+            },
+            {
+              field: "amountPaid",
+              headerName: "Paid",
+              flex: 1,
+            },
+            {
+              field: "balance",
+              headerName: "Balance",
+              flex: 1,
+            },
+            {
+              field:"actions",
               headerName: "Actions",
-              width: 200,
-              renderCell: (p) => (
+              width:200,
+              renderCell: (params) => (
+                console.log(params.row.paymentStatus),
                 <>
-                  {p.row.paymentStatus !== "Paid" && <Button onClick={() => setEdit(p.row)}>Edit</Button>}
-                  {p.row.paymentStatus !== "Paid" && <Button
+                {params.row.paymentStatus !== "Paid" && <Button onClick={() => setEdit(params.row)}>Edit</Button>}
+                  {params.row.paymentStatus !== "Paid" && <Button
                     color="error"
-                    onClick={() => deleteBilling(p.row._id).then(loadAll)}
+                    onClick={() => deleteBilling(params.row._id).then(loadAll)}
                   >
                     Delete
                   </Button> }
                 </>
-              ),
-            },
+              )
+            }
           ]}
         />
       </Box>
 
-      {/* ================= UPDATE DIALOG ================= */}
       {/* ================= UPDATE DIALOG ================= */}
       <Dialog
         open={!!edit}
@@ -331,9 +394,6 @@ const handleUpdate = async () => {
           </Typography>
           <Typography variant="subtitle2">
             Status: {edit?.paymentStatus}
-          </Typography>
-          <Typography variant="subtitle2">
-            Appointment: {edit?.appointmentInfo}
           </Typography>
 
           <Divider sx={{ my: 2 }} />
