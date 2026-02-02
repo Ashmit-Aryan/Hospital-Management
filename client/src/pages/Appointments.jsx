@@ -61,7 +61,6 @@ export default function Appointments() {
     const doctorsMap = Object.fromEntries(
       doctorsRes.data.map((d) => [d._id, d.name]),
     );
-
     setRows(
       appointmentsRes.data.map((a) => ({
         ...a,
@@ -70,6 +69,7 @@ export default function Appointments() {
         patientName: patientsMap[a.patientId] || "—",
         doctorName: doctorsMap[a.doctorId] || "—",
       })),
+      
     );
 
     setPatients(patientsRes.data);
@@ -211,10 +211,8 @@ export default function Appointments() {
     { field: "doctorName", headerName: "Doctor", flex: 1 },
     {
       field: "date",
-      headerName: "Date",
+      headerName: "Date | Time",
       width: 130,
-      valueFormatter: (p) =>
-        p.value ? dayjs(p.value).format("DD-MM-YYYY") : "—",
     },
     {
       field: "appointmentStatus",
